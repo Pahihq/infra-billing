@@ -1,0 +1,101 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import dayjs from 'dayjs';
+import { PrismaService } from '../prisma/prisma.service';
+import { AnalyticsService } from '../analytics/analytics.service';
+import {
+  lowBalanceMessage,
+  sampleMessages,
+  syncErrorMessage,
+  upcomingBillingMessage,
+} from './messages';
+import { TelegramService } from './telegram.service';
+
+const THROTTLE_HOURS = 24;
+const DEFAULT_UPCOMING_BILLING_DAYS = 3; // fallback only, until the Settings row exists
+
+@Injectable()
+export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly analytics: AnalyticsService,
+    private readonly telegram: TelegramService,
+  ) {}
+
+  /** Evaluate alert conditions and send (throttled) Telegram messages. Returns count sent. */
+  async checkAndNotify(): Promise<number> {
+    if (!(await this.telegram.isEnabled())) return 0;
+
+    const settings = await this.prisma.settings.findUnique({ where: { id: 1 } });
+    const upcomingDays = settings?.upcomingBillingDays ?? DEFAULT_UPCOMING_BILLING_DAYS;
+    const summary = await this.analytics.summary();
+    let sent = 0;
+
+    // 1) Low balance — a service whose imminent charge the provider balance won't cover
+    //    (severity "critical": uncovered + due within ~a week — same definition as the dashboard).
+    for (const ub of summary.upcomingBillings) {
+      if (ub.severity !== 'critical') continue;
+      const html = lowBalanceMessage(ub, summary.baseCurrency);
+      if (await this.maybeSend(`low-balance:${ub.serviceUuid}`, html)) sent += 1;
+    }
+
+    // 2) Upcoming billings within N days.
+    const horizon = dayjs().add(upcomingDays, 'day');
+    for (const ub of summary.upcomingBillings) {
+      if (dayjs(ub.nextBillingAt).isAfter(horizon)) continue;
+      const day = dayjs(ub.nextBillingAt).format('YYYY-MM-DD');
+      const html = upcomingBillingMessage(ub, day);
+      if (await this.maybeSend(`upcoming:${ub.serviceUuid}:${day}`, html)) sent += 1;
+    }
+
+    // 3) Sync errors in the last 24h (one per provider).
+    const since = dayjs().subtract(THROTTLE_HOURS, 'hour').toDate();
+    const errorRuns = await this.prisma.syncRun.findMany({
+      where: { status: 'error', finishedAt: { gte: since } },
+      orderBy: { finishedAt: 'desc' },
+      include: { provider: { select: { name: true } } },
+    });
+    const seenProviders = new Set<string>();
+    for (const run of errorRuns) {
+      if (seenProviders.has(run.providerUuid)) continue;
+      seenProviders.add(run.providerUuid);
+      const html = syncErrorMessage(run.provider.name, run.error ?? 'неизвестная ошибка');
+      if (await this.maybeSend(`sync-error:${run.providerUuid}`, html)) sent += 1;
+    }
+
+    if (sent > 0) this.logger.log(`Отправлено уведомлений: ${sent}`);
+    return sent;
+  }
+
+  /** Send one sample of every notification type to preview formats. Ignores throttling. */
+  async sendSamples(): Promise<number> {
+    let sent = 0;
+    for (const html of sampleMessages()) {
+      if (await this.telegram.send(html)) sent += 1;
+    }
+    return sent;
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async scheduled(): Promise<void> {
+    try {
+      await this.checkAndNotify();
+    } catch (e) {
+      this.logger.error('Проверка уведомлений упала', e instanceof Error ? e.stack : String(e));
+    }
+  }
+
+  /** Send only if the same dedup key hasn't been sent within THROTTLE_HOURS. */
+  private async maybeSend(dedupKey: string, html: string): Promise<boolean> {
+    const since = dayjs().subtract(THROTTLE_HOURS, 'hour').toDate();
+    const recent = await this.prisma.notificationLog.findFirst({
+      where: { dedupKey, sentAt: { gte: since } },
+    });
+    if (recent) return false;
+    const ok = await this.telegram.send(html);
+    if (ok) await this.prisma.notificationLog.create({ data: { dedupKey } });
+    return ok;
+  }
+}

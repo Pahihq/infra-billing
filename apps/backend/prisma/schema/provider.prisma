@@ -1,0 +1,24 @@
+model Provider {
+  uuid String @id @default(uuid()) @map("uuid")
+
+  name            String    @map("name")
+  kind            String    @map("kind")
+  faviconLink     String?   @map("favicon_link")
+  loginUrl        String?   @map("login_url")
+  credentialsEnc  Bytes?    @map("credentials_enc")
+  balance         Decimal?  @db.Decimal(14, 2) @map("balance")
+  balanceCurrency String?   @map("balance_currency")
+  balanceSyncedAt DateTime? @map("balance_synced_at")
+  lastSyncAt      DateTime? @map("last_sync_at")
+  lastSyncError   String?   @map("last_sync_error")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  services  Service[]
+  payments  Payment[]
+  snapshots BalanceSnapshot[]
+  syncRuns  SyncRun[]
+
+  @@map("providers")
+}

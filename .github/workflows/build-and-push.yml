@@ -1,0 +1,118 @@
+name: Build&Push Release Docker Image
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  send-tg-msg:
+    name: Send TG message
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram message
+        uses: proDreams/actions-telegram-notifier@main
+        with:
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          status: info
+          notify_fields: 'repository,branch,commit,workflow'
+          title: 'Build started.'
+
+  build-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare build metadata
+        id: meta
+        run: |
+          echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+          echo "build_time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
+            BUILD_TIME=${{ steps.meta.outputs.build_time }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  create-release:
+    name: Create release
+    needs: [build-docker-image]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          make_latest: true
+          body: |
+            Docker image:
+            - `ghcr.io/${{ github.repository }}:${{ github.ref_name }}`
+            - `ghcr.io/${{ github.repository }}:latest`
+
+  send-finish-tg-msg:
+    name: Send TG message
+    needs: [build-docker-image, create-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram message
+        uses: proDreams/actions-telegram-notifier@main
+        with:
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          status: ${{ job.status }}
+          notify_fields: 'repository,branch,commit'
+          title: 'Build finished.'
+
+  notify-on-error:
+    name: Notify on error
+    needs: [build-docker-image]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send error notification
+        uses: proDreams/actions-telegram-notifier@main
+        with:
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          status: failure
+          notify_fields: 'repository,branch,commit,workflow'
+          title: 'Build failed.'

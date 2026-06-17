@@ -1,0 +1,9 @@
+model NotificationLog {
+  id BigInt @id @default(autoincrement()) @map("id")
+
+  dedupKey String   @map("dedup_key")
+  sentAt   DateTime @default(now()) @map("sent_at")
+
+  @@index([dedupKey, sentAt], map: "notification_log_key_sent_idx")
+  @@map("notification_log")
+}

@@ -1,0 +1,12 @@
+model ExchangeRate {
+  id BigInt @id @default(autoincrement()) @map("id")
+
+  code       String   @map("code")
+  base       String   @map("base")
+  rate       Decimal  @db.Decimal(18, 8) @map("rate")
+  source     String   @map("source")
+  capturedAt DateTime @default(now()) @map("captured_at")
+
+  @@index([code, base, capturedAt], map: "exchange_rates_code_base_captured_idx")
+  @@map("exchange_rates")
+}

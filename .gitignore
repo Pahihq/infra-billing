@@ -1,0 +1,29 @@
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# prisma local artifacts
+**/prisma/*.db
+
+# docker image export
+infra-billing.tar.gz
+
+# logs / os
+*.log
+.DS_Store
+
+# Prisma 7 generated client
+apps/backend/src/generated/
+
+# tests
+apps/backend/test/
+.claude/
+CLAUDE.md

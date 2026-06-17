@@ -1,0 +1,15 @@
+model Settings {
+  id                Int    @id @default(1) @map("id")
+  baseCurrency      String @default("RUB") @map("base_currency")
+  syncIntervalHours Int    @default(6) @map("sync_interval_hours")
+  rateSource        String @default("cbr") @map("rate_source")
+
+  // Telegram notifications (managed in-panel). Token is AES-GCM encrypted, never returned by API.
+  notificationsEnabled Boolean @default(true) @map("notifications_enabled")
+  upcomingBillingDays  Int     @default(3) @map("upcoming_billing_days")
+  telegramBotTokenEnc  Bytes?  @map("telegram_bot_token_enc")
+  telegramChatId       String? @map("telegram_chat_id")
+  telegramTopicId      String? @map("telegram_topic_id")
+
+  @@map("settings")
+}

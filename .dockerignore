@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+.git
+.github
+*.log
+.env
+.env.local
+.DS_Store
+infra-billing.tar.gz

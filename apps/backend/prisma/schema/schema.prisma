@@ -1,0 +1,14 @@
+// Infra Billing — Prisma schema (multi-file). Config blocks live here; each model has its own file.
+// Convention: camelCase fields in Prisma, snake_case in the DB via @map; every model maps to a
+// plural snake_case table via @@map. Money is Decimal(14,2), never Float.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
