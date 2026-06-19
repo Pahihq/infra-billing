@@ -7,8 +7,8 @@
 
 ## Возможности
 
-- **Провайдеры с API:** Timeweb Cloud, Hetzner Cloud, HostBill, ISPsystem BILLmanager, Selectel,
-  4VPS.SU. Плюс **Manual** — провайдеры без API ведутся руками.
+- **Провайдеры с API:** Timeweb Cloud, Hetzner Cloud, netcup, HostBill, ISPsystem BILLmanager,
+  Selectel, 4VPS.SU. Плюс **Manual** — провайдеры без API ведутся руками.
 - **Автосинк** (по расписанию + кнопкой): баланс + валюта аккаунта, список серверов/услуг, даты
   следующих списаний; история баланса по дням (снапшоты).
 - **Импорт платежей** там, где API отдаёт реестр (BILLmanager — пополнения и списания, HostBill —
@@ -109,6 +109,9 @@ docker image prune
 
 - **Timeweb Cloud** — ЛК → «API и Terraform» → создать токен.
 - **Hetzner Cloud** — Project → Security → API Tokens (read). Баланса в API нет — только серверы.
+- **netcup** — кнопка «Авторизоваться через netcup» в форме: войдите в SCP в браузере и подтвердите
+  (OAuth2 device flow, токен подтянется сам). Баланса/цен/списаний в API нет — только серверы
+  (страна определяется по дата-центру).
 - **HostBill** — base URL вашей инсталляции (напр. `https://secure.veesp.com/api`) + email + пароль.
 - **ISP BILLmanager** — base URL (`https://.../billmgr`) + логин + пароль (+ TOTP-секрет, если 2FA по OTP).
 - **Selectel** — номер аккаунта + сервисный пользователь IAM (имя + пароль) с ролью на биллинг;

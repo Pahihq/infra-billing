@@ -33,6 +33,7 @@ import { useEnums } from '@/constants';
 import { formatDate, formatMoney } from '@/utils/format';
 import { providerFavicon } from '@/utils/favicon';
 import { ProviderIcon } from '@/components/ProviderIcon';
+import { NetcupAuthorizeButton } from '@/components/NetcupAuthorizeButton';
 
 interface FormValues {
   name: string;
@@ -116,6 +117,10 @@ export function ProvidersPage() {
     }
     if (!editing && v.kind === '4vps' && !v.token) {
       notifyError(t('providers.err.vps4Token'));
+      return;
+    }
+    if (!editing && v.kind === 'netcup' && !v.token) {
+      notifyError(t('providers.err.netcupToken'));
       return;
     }
     const creds = {
@@ -378,6 +383,16 @@ export function ProvidersPage() {
                   description={t('providers.field.panelIdDesc')}
                   placeholder="1"
                   {...form.getInputProps('panelId')}
+                />
+              </>
+            ) : form.values.kind === 'netcup' ? (
+              <>
+                <NetcupAuthorizeButton onToken={(tok) => form.setFieldValue('token', tok)} />
+                <TextInput
+                  label={t('providers.field.refreshToken')}
+                  description={t('providers.field.refreshTokenDescNetcup')}
+                  placeholder={editing ? t('providers.keepEmpty') : ''}
+                  {...form.getInputProps('token')}
                 />
               </>
             ) : (

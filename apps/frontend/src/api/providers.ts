@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateProvider, Provider, Service, SyncRun, UpdateProvider } from '@infra/shared';
+import type {
+  CreateProvider,
+  NetcupDevicePollResult,
+  NetcupDeviceStart,
+  Provider,
+  Service,
+  SyncRun,
+  UpdateProvider,
+} from '@infra/shared';
 import { api } from './client';
 import { API_PATH } from '@infra/shared';
 
@@ -79,5 +87,25 @@ export function useSyncAllProviders() {
       qc.invalidateQueries({ queryKey: ['services'] });
       qc.invalidateQueries({ queryKey: ['payments'] });
     },
+  });
+}
+
+/** Start the netcup OAuth2 device flow (returns the user code + verification URL). */
+export function useNetcupDeviceStart() {
+  return useMutation({
+    mutationFn: async () =>
+      (await api.post<NetcupDeviceStart>(API_PATH.PROVIDERS.NETCUP_DEVICE_START)).data,
+  });
+}
+
+/** Poll once for the netcup device-flow result (pending / authorized + refreshToken / …). */
+export function useNetcupDevicePoll() {
+  return useMutation({
+    mutationFn: async (deviceCode: string) =>
+      (
+        await api.post<NetcupDevicePollResult>(API_PATH.PROVIDERS.NETCUP_DEVICE_POLL, {
+          deviceCode,
+        })
+      ).data,
   });
 }

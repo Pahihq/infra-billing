@@ -85,6 +85,7 @@ export const common = {
       providerKind: {
         timeweb: 'Timeweb Cloud',
         hetzner: 'Hetzner Cloud',
+        netcup: 'netcup',
         hostbill: 'HostBill',
         billmgr: 'ISP BILLmanager',
         selectel: 'Selectel',
@@ -180,6 +181,7 @@ export const common = {
       providerKind: {
         timeweb: 'Timeweb Cloud',
         hetzner: 'Hetzner Cloud',
+        netcup: 'netcup',
         hostbill: 'HostBill',
         billmgr: 'ISP BILLmanager',
         selectel: 'Selectel',

@@ -2,6 +2,7 @@ export * from './enums';
 export * from './routes';
 export * from './schemas/common';
 export * from './schemas/provider';
+export * from './schemas/netcup';
 export * from './schemas/service';
 export * from './schemas/payment';
 export * from './schemas/settings';

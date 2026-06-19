@@ -15,6 +15,7 @@ export const SERVICE_TYPES: ServiceType[] = [
 export const PROVIDER_KINDS: ProviderKind[] = [
   'timeweb',
   'hetzner',
+  'netcup',
   'hostbill',
   'billmgr',
   'selectel',

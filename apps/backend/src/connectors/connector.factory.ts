@@ -7,6 +7,7 @@ import { Connector } from './connector.interface';
 import { HetznerConnector } from './hetzner/hetzner.connector';
 import { HostbillConnector } from './hostbill/hostbill.connector';
 import type { HostbillCredentials } from './hostbill/hostbill.types';
+import { NetcupConnector } from './netcup/netcup.connector';
 import { SelectelConnector } from './selectel/selectel.connector';
 import type { SelectelCredentials } from './selectel/selectel.types';
 import { TimewebConnector } from './timeweb/timeweb.connector';
@@ -23,6 +24,9 @@ export class ConnectorFactory {
         return new TimewebConnector(token);
       case 'hetzner':
         return new HetznerConnector(token);
+      case 'netcup':
+        // netcup secret is the OAuth2 offline refresh token (single string, like timeweb).
+        return new NetcupConnector(token);
       case 'hostbill':
         // For HostBill the decrypted secret is JSON: { baseUrl, username, password }.
         return new HostbillConnector(JSON.parse(token) as HostbillCredentials);

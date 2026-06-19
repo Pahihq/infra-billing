@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
-/** Connector kinds. API-backed: timeweb, hetzner, hostbill, billmgr, selectel, 4vps. manual = no sync. */
+/** Connector kinds. API-backed: timeweb, hetzner, netcup, hostbill, billmgr, selectel, 4vps. manual = no sync. */
 export const providerKindSchema = z.enum([
   'timeweb',
   'hetzner',
+  'netcup',
   'hostbill',
   'billmgr',
   'selectel',
