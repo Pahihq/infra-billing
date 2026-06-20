@@ -72,6 +72,24 @@ const EMPTY_FORM: FormValues = {
   panelId: '',
 };
 
+// The default Mantine/recharts Y-axis starts at 0, so a near-flat balance line (e.g. a steady 36)
+// gets glued to the top of the chart with everything below it empty. Pad the axis around the actual
+// values — snapped to a "nice" 1/2/5 step — so the line sits mid-chart with clean tick labels.
+function niceBalanceDomain(values: number[]): { domain: [number, number]; ticks: number[] } {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const spread = max - min || Math.abs(max) || 1;
+  const rawStep = spread / 4;
+  const mag = 10 ** Math.floor(Math.log10(rawStep));
+  const norm = rawStep / mag;
+  const step = (norm >= 5 ? 5 : norm >= 2 ? 2 : 1) * mag;
+  const lo = Math.floor((min - spread * 0.2) / step) * step;
+  const hi = Math.ceil((max + spread * 0.2) / step) * step;
+  const ticks: number[] = [];
+  for (let v = lo; v <= hi + step / 2; v += step) ticks.push(Number(v.toFixed(6)));
+  return { domain: [lo, hi], ticks };
+}
+
 export function ProvidersPage() {
   const { t } = useTranslation();
   const enums = useEnums();
@@ -91,6 +109,9 @@ export function ProvidersPage() {
   for (const pt of history.data ?? [])
     dailyBalance.set(formatDateShort(pt.capturedAt), Number(pt.balance));
   const historyData = [...dailyBalance].map(([date, balance]) => ({ date, balance }));
+  const balanceAxis = historyData.length
+    ? niceBalanceDomain(historyData.map((d) => d.balance))
+    : null;
   const latest = history.data?.[history.data.length - 1];
   const historyCurrency = latest?.currency ?? historyFor?.balanceCurrency ?? '';
 
@@ -466,7 +487,11 @@ export function ProvidersPage() {
             curveType="linear"
             withDots={historyData.length <= 60}
             valueFormatter={(v) => formatMoney(String(v), historyCurrency)}
-            yAxisProps={{ tickFormatter: (v: number) => formatMoney(String(v)) }}
+            yAxisProps={{
+              domain: balanceAxis?.domain,
+              ticks: balanceAxis?.ticks,
+              tickFormatter: (v: number) => formatMoney(String(v)),
+            }}
           />
         ) : latest ? (
           <Stack gap={2} py="lg" align="center">
