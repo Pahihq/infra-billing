@@ -317,7 +317,7 @@ export function ProvidersPage() {
                       <Tooltip label={t('common.refresh')}>
                         <ActionIcon
                           variant="subtle"
-                          loading={sync.isPending}
+                          loading={sync.isPending && sync.variables === p.uuid}
                           onClick={() => doSync(p.uuid)}
                         >
                           <IconRefresh size={16} />
