@@ -1,71 +1,82 @@
-// Telegram notification message templates — kept here so formats and emoji are easy to change in
-// one place. All messages use HTML parse_mode (grammY Api). To use a custom Telegram emoji, replace
-// an EMOJI value with a <tg-emoji> tag, e.g.
-//   lowBalance: '<tg-emoji emoji-id="5368324170671202286">⚠️</tg-emoji>'
-// (the bot must have access to that custom emoji; the inner text is the fallback).
-
 import type { AnalyticsSummary } from '@infra/shared';
 
 type UpcomingBilling = AnalyticsSummary['upcomingBillings'][number];
 
-/** Leading emoji per alert type — swap to <tg-emoji emoji-id="…">…</tg-emoji> for custom ones. */
 export const EMOJI = {
-  lowBalance: '⚠️',
-  upcoming: '🗓',
-  syncError: '❌',
-  test: '✅',
+  lowBalance: '<tg-emoji emoji-id="5258474669769497337">❗</tg-emoji>',
+  upcoming: '<tg-emoji emoji-id="5258105663359294787">🗓</tg-emoji>',
+  syncError: '<tg-emoji emoji-id="5260342697075416641">❌</tg-emoji>',
+  test: '<tg-emoji emoji-id="5260726538302660868">✅</tg-emoji>',
+  samples: '<tg-emoji emoji-id="5260268501515377807">📣</tg-emoji>',
+  provider: '<tg-emoji emoji-id="5258093637450866522">🤖</tg-emoji>',
+  service: '<tg-emoji emoji-id="5258423306255604960">💻</tg-emoji>',
+  balance: '<tg-emoji emoji-id="5258368777350816286">🪙</tg-emoji>',
+  amount: '<tg-emoji emoji-id="5258368777350816286">🪙</tg-emoji>',
+  date: '<tg-emoji emoji-id="5258105663359294787">🗓</tg-emoji>',
+  clock: '<tg-emoji emoji-id="5258258882022612173">⏲</tg-emoji>',
+  info: '<tg-emoji emoji-id="5258503720928288433">ℹ</tg-emoji>',
 } as const;
 
-/** Escape user-provided values for Telegram HTML. */
 export function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function ruDays(n: number): string {
+  const d10 = n % 10;
+  const d100 = n % 100;
+  if (d10 === 1 && d100 !== 11) return 'день';
+  if (d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14)) return 'дня';
+  return 'дней';
+}
+
+function whenLabel(daysUntil: number): string {
+  if (daysUntil <= 0) return 'сегодня';
+  if (daysUntil === 1) return 'завтра';
+  return `через ${daysUntil} ${ruDays(daysUntil)}`;
+}
+
 /** Low balance: an imminent charge the provider balance won't cover. */
 export function lowBalanceMessage(ub: UpcomingBilling, baseCurrency: string): string {
-  const when = ub.daysUntil === 0 ? 'today' : `in ${ub.daysUntil} day(s)`;
   return (
-    `${EMOJI.lowBalance} <b>Low balance</b>\n` +
-    `${esc(ub.providerName)} — <b>${esc(ub.name)}</b>\n` +
-    `Not enough to cover charge <code>${esc(ub.costBase)} ${esc(baseCurrency)}</code> (${when})\n` +
-    `Balance: <code>${esc(ub.providerBalance ?? '0')} ${esc(ub.providerBalanceCurrency ?? '')}</code>`
+    `${EMOJI.lowBalance} <b>Низкий баланс</b>\n\n` +
+    `${EMOJI.provider} <b>${esc(ub.providerName)}</b>\n` +
+    `${EMOJI.service} ${esc(ub.name)}\n\n` +
+    `${EMOJI.clock} Списание <code>${esc(ub.costBase)} ${esc(baseCurrency)}</code> ${whenLabel(ub.daysUntil)} — баланса не хватит.\n` +
+    `${EMOJI.balance} Баланс: <code>${esc(ub.providerBalance ?? '0')} ${esc(ub.providerBalanceCurrency ?? '')}</code>`
   );
 }
 
 /** Upcoming charge reminder (regardless of coverage). `day` is YYYY-MM-DD. */
 export function upcomingBillingMessage(ub: UpcomingBilling, day: string): string {
   return (
-    `${EMOJI.upcoming} <b>Upcoming charge</b>\n` +
-    `${esc(ub.providerName)} — <b>${esc(ub.name)}</b>\n` +
-    `Date: <code>${esc(day)}</code>\n` +
-    `Amount: <code>${esc(ub.cost)} ${esc(ub.currency)}</code>`
+    `${EMOJI.upcoming} <b>Скоро списание</b>\n\n` +
+    `${EMOJI.provider} <b>${esc(ub.providerName)}</b>\n` +
+    `${EMOJI.service} ${esc(ub.name)}\n\n` +
+    `${EMOJI.date} Дата: <code>${esc(day)}</code>\n` +
+    `${EMOJI.amount} Сумма: <code>${esc(ub.cost)} ${esc(ub.currency)}</code>`
   );
 }
 
 /** Provider sync failure. */
 export function syncErrorMessage(providerName: string, error: string): string {
   return (
-    `${EMOJI.syncError} <b>Sync error</b>\n` +
-    `Provider: <b>${esc(providerName)}</b>\n` +
-    `<code>${esc(error)}</code>`
+    `${EMOJI.syncError} <b>Ошибка синхронизации</b>\n\n` +
+    `${EMOJI.provider} Провайдер: <b>${esc(providerName)}</b>\n` +
+    `${EMOJI.info} <code>${esc(error)}</code>`
   );
 }
 
 /** Manual "test" send to verify the Telegram configuration. */
 export function testMessage(): string {
-  return `${EMOJI.test} <b>Infra Billing</b>: test notification`;
+  return `${EMOJI.test} <b>Infra Billing</b> — тестовое уведомление`;
 }
 
-/**
- * One sample of EVERY notification type (with obvious demo data) — used by the "test" send so you
- * can preview all formats/emoji in Telegram at once. Not throttled, not persisted.
- */
 export function sampleMessages(): string[] {
   const inTwoDays = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
   const sample: UpcomingBilling = {
     serviceUuid: '00000000-0000-0000-0000-000000000000',
     name: 'demo-vps',
-    providerName: 'Example provider',
+    providerName: 'Тестовый провайдер',
     nextBillingAt: `${inTwoDays}T00:00:00.000Z`,
     cost: '500.00',
     currency: 'RUB',
@@ -77,9 +88,9 @@ export function sampleMessages(): string[] {
     severity: 'critical',
   };
   return [
-    `${EMOJI.test} <b>Notification test</b> — samples of all types below:`,
+    `${EMOJI.samples} <b>Проверка уведомлений</b> — примеры всех типов ниже:`,
     lowBalanceMessage(sample, 'RUB'),
     upcomingBillingMessage(sample, inTwoDays),
-    syncErrorMessage('Example provider', 'HTTP 401: invalid API token'),
+    syncErrorMessage('Тестовый провайдер', 'HTTP 401: неверный API-токен'),
   ];
 }
