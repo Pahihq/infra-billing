@@ -44,7 +44,11 @@ export class ServicesService {
   async update(uuid: string, dto: UpdateServiceDto): Promise<ServiceDto> {
     await this.ensureExists(uuid);
     const data: Prisma.ServiceUpdateInput = {};
-    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.name !== undefined) {
+      data.name = dto.name;
+      // Manual name edit — sync must not overwrite it.
+      data.nameOverridden = true;
+    }
     if (dto.type !== undefined) data.type = dto.type;
     if (dto.cost !== undefined) {
       data.cost = dto.cost;

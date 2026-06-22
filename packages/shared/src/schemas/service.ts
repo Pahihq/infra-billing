@@ -22,6 +22,7 @@ export const serviceSchema = z.object({
   isActive: z.boolean(),
   isManaged: z.boolean(),
   costOverridden: z.boolean(),
+  nameOverridden: z.boolean(),
   meta: z.record(z.string(), z.unknown()),
   paymentsCount: z.number().int().nonnegative().optional(),
   createdAt: isoDateSchema,
