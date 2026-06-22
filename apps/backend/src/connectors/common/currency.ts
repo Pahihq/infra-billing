@@ -18,6 +18,9 @@ const CURRENCY_ALIASES: Record<string, string> = {
   kzt: 'KZT',
   '₴': 'UAH',
   uah: 'UAH',
+  '₺': 'TRY',
+  tl: 'TRY',
+  try: 'TRY',
 };
 
 /**
