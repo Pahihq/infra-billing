@@ -1,8 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
 // scrypt password hashing (node:crypto, no extra deps). Stored as "saltHex:hashHex".
-// scrypt is a standardized memory-hard KDF; for a single-user self-hosted panel it's a good fit
-// and avoids the native build of argon2.
+// scrypt over argon2: no native build needed, fine for single-user.
 const N = 16384;
 const R = 8;
 const P = 1;
