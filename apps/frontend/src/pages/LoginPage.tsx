@@ -66,9 +66,8 @@ function SetupForm() {
     },
   });
 
-  // Fill both fields with a strong password and copy it; the fields stay masked (the owner can
-  // reveal with the eye). The clipboard API needs a secure context (https/localhost); if the copy
-  // fails we tell the owner to copy it manually rather than claim a copy that didn't happen.
+  // clipboard.writeText needs a secure context (https/localhost) — if it fails, tell the owner
+  // to copy manually instead of claiming a copy that didn't happen.
   const generate = async () => {
     const password = generatePassword();
     form.setValues({ password, confirm: password });

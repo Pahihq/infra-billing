@@ -41,6 +41,7 @@ export const providers = {
       apiToken: 'API token',
       apiTokenDesc4vps: '4VPS personal account → API section',
       apiTokenDescNetlen: 'Netlen panel → API. Important: whitelist the server IP for the key.',
+      apiTokenDescVultr: 'Vultr → Account → API. Whitelist the server IP if Access Control is on.',
       refreshToken: 'Refresh token (OAuth2)',
       refreshTokenDescNetcup:
         'Use “Authorize via netcup” above, or paste an offline refresh token manually',
@@ -60,6 +61,7 @@ export const providers = {
       vps4Token: 'Enter the 4VPS API token',
       netcupToken: 'Authorize via netcup or paste a refresh token',
       begetCreds: 'Enter the Beget login and password',
+      vultrToken: 'Enter the Vultr API key',
     },
     netcup: {
       authorize: 'Authorize via netcup',
@@ -122,6 +124,8 @@ export const providers = {
       apiToken: 'API-токен',
       apiTokenDesc4vps: 'Личный кабинет 4VPS → раздел API',
       apiTokenDescNetlen: 'Панель Netlen → API. Важно: добавьте IP сервера в whitelist ключа.',
+      apiTokenDescVultr:
+        'Vultr → Account → API. Если включён Access Control — добавьте IP сервера в whitelist.',
       refreshToken: 'Refresh-токен (OAuth2)',
       refreshTokenDescNetcup:
         'Нажмите «Авторизоваться через netcup» выше или вставьте offline refresh-токен вручную',
@@ -141,6 +145,7 @@ export const providers = {
       vps4Token: 'Укажите API-токен 4VPS',
       netcupToken: 'Авторизуйтесь через netcup или вставьте refresh-токен',
       begetCreds: 'Укажите логин и пароль Beget',
+      vultrToken: 'Укажите API-ключ Vultr',
     },
     netcup: {
       authorize: 'Авторизоваться через netcup',

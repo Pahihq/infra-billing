@@ -15,14 +15,11 @@ const BASE_URL = 'https://api.netlen.com.tr/v1';
 const PER_PAGE = 100;
 const MAX_PAGES = 50; // safety cap so a misbehaving pagination contract can't loop forever
 
-/**
- * Netlen connector (https://api.netlen.com.tr/v1) — verified live. No npm SDK, so a thin axios
- * client. Auth: a custom `X-API-Key` header (NOT Bearer). Every response is `{ success, data }`
- * (or `{ success:false, error, code }`). Money is USD. Balance is `/balance`; servers (monthly
- * `amount`) come from `/servers`; the `/balance/transactions` deposit/withdraw ledger maps to
- * topup/charge payments. The API key is IP-whitelisted in the panel — an un-whitelisted key fails
- * with code `NO_IP_WHITELISTED`, which we surface as the sync error.
- */
+// Netlen (https://api.netlen.com.tr/v1), verified live. No npm SDK -> thin axios client.
+// Auth via custom `X-API-Key` header (NOT Bearer). Responses are `{ success, data }` (or
+// `{ success:false, error, code }`). Money is USD. `/balance`, `/servers` (monthly `amount`),
+// `/balance/transactions` deposit/withdraw ledger -> topup/charge. Key is IP-whitelisted in
+// the panel; un-whitelisted key fails with `NO_IP_WHITELISTED`, surfaced as the sync error.
 export class NetlenConnector implements Connector {
   private readonly http: AxiosInstance;
 

@@ -46,11 +46,8 @@ import { mapPasskeyError, passkeySupported } from '@/api/webauthn';
 import { notifyError, notifySuccess } from '@/utils/notify';
 import { formatDate } from '@/utils/format';
 
-/**
- * One sign-in method row: icon + label on the left, enable switch on the right. Rows that carry
- * configuration (passkey) also get an expand chevron and a collapsible body; plain on/off rows
- * (password) omit both — the switch is the whole control.
- */
+// A sign-in method row. Rows with config (passkey) get an expand chevron + collapsible body;
+// plain on/off rows (password) are just the switch.
 function MethodRow({
   icon: RowIcon,
   title,

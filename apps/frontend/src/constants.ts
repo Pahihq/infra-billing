@@ -27,6 +27,7 @@ export const PROVIDER_KINDS: ProviderKind[] = [
   '4vps',
   'netlen',
   'beget',
+  'vultr',
   'manual',
 ];
 
@@ -34,10 +35,8 @@ export const PROVIDER_KINDS: ProviderKind[] = [
 // pickers and the CBR rate fetch stay in sync.
 export const CURRENCY_OPTIONS = SUPPORTED_CURRENCIES.map((c) => ({ value: c, label: c }));
 
-/**
- * Translated labels and `<Select>` options for the domain enums. The underlying values
- * (`monthly`, `vps`, `timeweb`, …) are stable; only the displayed label is localized.
- */
+// Translated labels + <Select> options for the domain enums; values (monthly, vps, …) stay
+// stable, only the displayed label is localized.
 export function useEnums() {
   const { t } = useTranslation();
   const periodLabel = (p: string) => t(`enums.period.${p}`, p);

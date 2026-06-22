@@ -13,7 +13,7 @@ function parseDate(s?: string | null): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
-/** Map a Netlen server to our domain Service. `amount` is the MONTHLY price in USD. */
+// `amount` is the MONTHLY price in USD.
 export function mapNetlenServer(s: NetlenServer): ServiceData {
   return {
     externalId: String(s.server_id),
@@ -28,12 +28,9 @@ export function mapNetlenServer(s: NetlenServer): ServiceData {
   };
 }
 
-/**
- * Map a Netlen ledger transaction to a Payment. The ledger is one id sequence of `deposit`
- * (money in → topup) and `withdraw` (service charge → charge); only successful rows are
- * imported (unknown type/status → null, skipped). Transactions carry no server id (only the
- * service name in the description), so charges stay at the provider level (no service link).
- */
+// One id sequence of `deposit` (-> topup) and `withdraw` (-> charge); only successful rows
+// imported (unknown type/status -> null). No server id on a txn (just the service name in the
+// description), so charges stay at the provider level (no service link).
 export function mapNetlenTransaction(t: NetlenTransaction): PaymentData | null {
   if (t.status && t.status !== 'success') return null;
   // `/balance` reports `total_refunds`, but no refund row appeared in the live ledger, so the

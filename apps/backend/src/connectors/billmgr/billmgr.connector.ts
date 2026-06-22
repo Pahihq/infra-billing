@@ -38,13 +38,13 @@ const TOTP_FAILED_MESSAGE =
   'and the server clock synchronization.';
 
 /**
- * ISPsystem BILLmanager connector (https://docs.ispsystem.com/billmanager). CGI API at
- * `{base}/billmgr?func=...&out=json`, responses wrapped in `doc`, scalars as {"$":...}.
- * Auth: POST func=auth → session (doc.auth.$id, ~1h) reused via `auth` param. No npm SDK.
- * Balance/currency: func=whoami → doc.user.$balance/$currency. Services: per-type list
- * funcs (vds/dedic/vhost/domain/...) → doc.elem[]. 2FA: func=auth still returns a session,
- * but it stays unconfirmed (data funcs return `doc.ok` instead of payload); we detect that on
- * first whoami and either confirm via OTP (if a TOTP secret is set) or fail with a clear message.
+ * ISPsystem BILLmanager (https://docs.ispsystem.com/billmanager). CGI API at
+ * `{base}/billmgr?func=...&out=json`, responses wrapped in `doc`, scalars as {"$":...}. No npm SDK.
+ * Auth: POST func=auth → session (doc.auth.$id, ~1h) reused via `auth` param.
+ * Balance/currency: func=whoami → doc.user.$balance/$currency. Services: per-type list funcs
+ * (vds/dedic/vhost/domain/...) → doc.elem[]. 2FA: func=auth still returns a session but it stays
+ * unconfirmed (data funcs return `doc.ok` instead of payload); detected on first whoami, then we
+ * confirm via OTP (if a TOTP secret is set) or fail with a clear message.
  */
 export class BillmgrConnector implements Connector {
   private readonly http: AxiosInstance;

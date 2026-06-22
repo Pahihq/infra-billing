@@ -6,11 +6,8 @@ export interface TokenResponse {
   refresh_token?: string;
 }
 
-/**
- * A server from `GET /scp-core/api/v1/servers`. The new REST API is not formally
- * documented (the community CLI prints the JSON as-is), so we type the fields we map
- * loosely and keep the rest via the index signature → dumped into `meta`.
- */
+// `GET /scp-core/api/v1/servers`. New REST API isn't formally documented (community CLI
+// prints JSON as-is) -> type mapped fields loosely, rest goes to `meta` via index signature.
 export interface NetcupServer {
   id?: number | string;
   serverId?: number | string;

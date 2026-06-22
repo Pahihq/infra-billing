@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
-// WebAuthn ceremony payloads are pass-through. The precise PublicKeyCredential*OptionsJSON /
-// *ResponseJSON shapes are defined by @simplewebauthn/* (the browser lib types the frontend, the
-// server lib validates on the backend), so re-declaring them in zod would only drift. We validate
-// strictly only the few fields we actually read (e.g. the optional passkey name).
+// Ceremony payloads are pass-through: @simplewebauthn/* owns the PublicKeyCredential*JSON shapes
+// (browser types the frontend, server validates the backend), so re-declaring them in zod would
+// only drift. Validate just the fields we read (e.g. the optional passkey name).
 
 export const passkeyRegisterVerifySchema = z.object({
   response: z.unknown(),

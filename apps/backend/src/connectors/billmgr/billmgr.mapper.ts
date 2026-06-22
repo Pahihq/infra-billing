@@ -3,12 +3,9 @@ import { normalizeCurrency } from '../common/currency';
 import { ServiceData } from '../connector.interface';
 import { firstNumber, val } from './billmgr.parse';
 
-/**
- * Resolve the billing period. BILLmanager's numeric `period` is months for standard plans
- * (1/3/12), but daily/hourly plans use negative codes (e.g. -50 = day). The reliable signal is
- * `autoprolong` (the renew-period word: «день»/«месяц»/«год»…), so we use it first and fall
- * back to the numeric months. `cost` is the per-period price (item_cost), kept as-is.
- */
+// Numeric `period` is months for standard plans (1/3/12) but negative for daily/hourly (-50 = day),
+// so prefer the `autoprolong` word («день»/«месяц»/«год»…); numeric months is the fallback.
+// `cost` is the per-period price (item_cost), kept as-is.
 export function resolvePeriod(
   periodStr: string | undefined,
   autoprolong: string | undefined,

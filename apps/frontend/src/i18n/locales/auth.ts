@@ -1,4 +1,4 @@
-// Strings for the "Sign-in" (Вход в систему) settings page. Keys live under the `auth` namespace.
+// Sign-in settings page strings. Keys live under the `auth` namespace.
 export const auth = {
   en: {
     title: 'Sign-in',

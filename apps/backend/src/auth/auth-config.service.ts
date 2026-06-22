@@ -108,9 +108,8 @@ export class AuthConfigService {
   }
 
   /**
-   * Secret for signing/verifying the session cookie. Random, generated once, stored AES-GCM
-   * encrypted on the admin row, and cached in memory. Survives restarts (unlike the old
-   * derive-from-creds scheme), and no longer depends on any env var.
+   * Session-cookie signing secret: random, generated once, stored AES-GCM encrypted on the admin
+   * row and cached. Survives restarts (unlike the old derive-from-creds scheme), no env var needed.
    */
   async getSessionSecret(): Promise<string> {
     if (this.cachedSecret) return this.cachedSecret;

@@ -20,16 +20,15 @@ const TWO_FACTOR_MESSAGE =
   'secret in the provider settings so the sync can generate the one-time code itself.';
 
 /**
- * Beget connector — verified live. Beget exposes TWO APIs on api.beget.com:
- *  - the new Cloud API (/v1/*): JWT auth — POST /v1/auth with the ACCOUNT login+password → { token },
- *    then `Authorization: Bearer <jwt>` (must be mixed-case "Bearer"; "BEARER" 500s). Lists VPS
- *    (/v1/vps/server/list) and managed cloud services (/v1/cloud: DB/S3/CDN/Network Drive), in RUB.
- *    It exposes NO account balance and NO next-billing date.
- *  - the legacy hosting API (/api/user/getAccountInfo): login + the separate panel "API password"
- *    → account balance (user_balance, RUB). Optional — set the API password to enable balance.
- * No npm SDK is used (the official openapi-auth-* generators aren't published to npm), so a thin
- * axios client. 2FA: if /v1/auth returns CODE_REQUIRED_TOTP we confirm with a generated TOTP code
- * (needs the base32 secret); SMS/email 2FA can't be automated.
+ * Beget connector — verified live. TWO APIs on api.beget.com:
+ *  - new Cloud API (/v1/*): JWT auth — POST /v1/auth, ACCOUNT login+password → { token }, then
+ *    `Authorization: Bearer <jwt>` (mixed-case "Bearer"; "BEARER" 500s). Lists VPS
+ *    (/v1/vps/server/list) and cloud services (/v1/cloud: DB/S3/CDN/Network Drive), RUB. No balance,
+ *    no next-billing date.
+ *  - legacy hosting API (/api/user/getAccountInfo): login + the separate panel "API password" →
+ *    balance (user_balance, RUB). Optional.
+ * No npm SDK (official openapi-auth-* generators aren't on npm) → thin axios client. 2FA: on
+ * CODE_REQUIRED_TOTP we confirm with a generated code (needs the base32 secret); SMS/email can't.
  */
 export class BegetConnector implements Connector {
   private readonly http: AxiosInstance;

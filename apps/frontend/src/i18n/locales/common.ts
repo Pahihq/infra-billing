@@ -1,6 +1,5 @@
-// Shared vocabulary used across every page: actions, nav, login, build dialog,
-// notifications, the language switcher, validation messages, and domain enum labels.
-// Page-specific strings live in their own locale module (dashboard.ts, providers.ts, …).
+// Shared vocabulary used across every page. Page-specific strings live in
+// their own locale module (dashboard.ts, providers.ts, …).
 export const common = {
   en: {
     common: {
@@ -112,6 +111,7 @@ export const common = {
         '4vps': '4VPS.SU',
         netlen: 'Netlen',
         beget: 'Beget Cloud',
+        vultr: 'Vultr',
         manual: 'Manual',
       },
       rateSource: {
@@ -230,6 +230,7 @@ export const common = {
         '4vps': '4VPS.SU',
         netlen: 'Netlen',
         beget: 'Beget Cloud',
+        vultr: 'Vultr',
         manual: 'Ручной',
       },
       rateSource: {

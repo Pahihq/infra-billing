@@ -18,11 +18,8 @@ function httpUrl(u: string): string | null {
   }
 }
 
-/**
- * Runs the netcup OAuth2 device flow entirely in the panel: starts authorization, shows the
- * verification link + user code, and polls until the owner approves — then hands the minted
- * refresh token to the parent form via `onToken`. No external script needed.
- */
+// netcup OAuth2 device flow in-panel: shows verification link + user code, polls until the
+// owner approves, then hands the minted refresh token to the parent form via onToken.
 export function NetcupAuthorizeButton({ onToken }: { onToken: (token: string) => void }) {
   const { t } = useTranslation();
   const startMut = useNetcupDeviceStart();

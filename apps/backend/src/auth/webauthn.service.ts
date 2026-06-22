@@ -25,8 +25,7 @@ import { nextPasskeyName } from './passkey-name.util';
 type AuthConfigRow = Prisma.AuthConfigGetPayload<Record<string, never>>;
 type PasskeyRow = Prisma.PasskeyGetPayload<Record<string, never>>;
 
-// Thin wrapper around the SimpleWebAuthn server library (the maintained reference WebAuthn
-// implementation). Persists registered passkeys and owns the passkey-related lockout guard.
+// Thin wrapper around @simplewebauthn/server. Persists passkeys and owns the passkey lockout guard.
 @Injectable()
 export class WebAuthnService {
   constructor(

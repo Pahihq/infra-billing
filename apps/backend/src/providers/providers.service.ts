@@ -96,12 +96,9 @@ export class ProvidersService {
     await this.prisma.provider.delete({ where: { uuid } });
   }
 
-  /**
-   * Encrypt provider credentials for storage. timeweb/hetzner → the raw token.
-   * hostbill/billmgr/selectel/4vps → JSON (per-kind fields). New values are merged onto
-   * `existingEnc` so a partial update (e.g. adding only a TOTP secret) keeps the rest. Returns
-   * null when nothing credential-related was supplied (update leaves creds intact).
-   */
+  // Encrypt creds for storage: timeweb/hetzner → raw token; hostbill/billmgr/selectel/4vps → JSON.
+  // Merged onto existingEnc so a partial edit (e.g. only a TOTP secret) keeps the rest. Returns null
+  // when nothing credential-related was supplied (update leaves creds intact).
   private buildCredentials(
     kind: string,
     dto: {

@@ -169,6 +169,10 @@ export function ProvidersPage() {
       notifyError(t('providers.err.begetCreds'));
       return;
     }
+    if (!editing && v.kind === 'vultr' && !v.token) {
+      notifyError(t('providers.err.vultrToken'));
+      return;
+    }
     const creds = {
       token: v.token || undefined,
       baseUrl: v.baseUrl || undefined,
@@ -453,6 +457,13 @@ export function ProvidersPage() {
               <TextInput
                 label={t('providers.field.apiToken')}
                 description={t('providers.field.apiTokenDescNetlen')}
+                placeholder={editing ? t('providers.keepEmpty') : ''}
+                {...form.getInputProps('token')}
+              />
+            ) : form.values.kind === 'vultr' ? (
+              <TextInput
+                label={t('providers.field.apiToken')}
+                description={t('providers.field.apiTokenDescVultr')}
                 placeholder={editing ? t('providers.keepEmpty') : ''}
                 {...form.getInputProps('token')}
               />

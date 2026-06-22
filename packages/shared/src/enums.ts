@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Connector kinds. API-backed: timeweb, hetzner, netcup, hostbill, billmgr, selectel, 4vps, netlen, beget. manual = no sync. */
+/** Connector kinds. API-backed: timeweb, hetzner, netcup, hostbill, billmgr, selectel, 4vps, netlen, beget, vultr. manual = no sync. */
 export const providerKindSchema = z.enum([
   'timeweb',
   'hetzner',
@@ -11,6 +11,7 @@ export const providerKindSchema = z.enum([
   '4vps',
   'netlen',
   'beget',
+  'vultr',
   'manual',
 ]);
 export type ProviderKind = z.infer<typeof providerKindSchema>;

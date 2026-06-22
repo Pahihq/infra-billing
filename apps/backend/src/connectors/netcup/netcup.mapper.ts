@@ -1,11 +1,8 @@
 import { ServiceData } from '../connector.interface';
 import { NetcupServer } from './netcup.types';
 
-/**
- * Map a netcup SCP server to our domain Service. The REST API exposes NO price
- * (server management only), so `cost` is left unset — the owner enters it manually
- * (like Hetzner configurator servers). netcup bills in EUR.
- */
+// REST API exposes no price (server management only) -> cost unset, owner enters it
+// manually (like Hetzner configurator servers). netcup bills in EUR.
 export function mapNetcupServer(s: NetcupServer): ServiceData {
   const externalId = String(s.id ?? s.serverId ?? s.name ?? s.nickname ?? '');
   const name = s.nickname || s.name || s.hostname || `netcup ${externalId}`;

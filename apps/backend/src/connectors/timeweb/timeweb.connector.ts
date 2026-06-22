@@ -12,10 +12,7 @@ import {
 
 const BASE_URL = 'https://api.timeweb.cloud';
 
-/**
- * Timeweb Cloud connector — real endpoints. No maintained npm
- * SDK exists, so we use a thin axios client. Auth: Bearer <API_TOKEN>.
- */
+// Timeweb Cloud: no maintained npm SDK, so a thin axios client. Auth: Bearer <API_TOKEN>.
 export class TimewebConnector implements Connector {
   private readonly http: AxiosInstance;
 

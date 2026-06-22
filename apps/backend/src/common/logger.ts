@@ -1,11 +1,8 @@
 import { utilities as nestWinstonUtilities } from 'nest-winston';
 import * as winston from 'winston';
 
-/**
- * Winston options for WinstonModule.forRoot — NestJS-like, colorized, human-readable
- * console output (same style in dev and prod; not JSON). Level is `debug` only when
- * NODE_ENV=development, `http` otherwise (production is the default).
- */
+// NestLike colorized console, same style in dev and prod (not JSON).
+// Level: `debug` only when NODE_ENV=development, else `http` (prod is the default).
 export function appLoggerOptions(): winston.LoggerOptions {
   const isProd = process.env.NODE_ENV !== 'development';
   return {

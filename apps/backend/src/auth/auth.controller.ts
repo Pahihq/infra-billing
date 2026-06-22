@@ -40,8 +40,6 @@ export class AuthController {
     private readonly webauthn: WebAuthnService,
   ) {}
 
-  // ---- public: first-run bootstrap + login ----
-
   @Public()
   @Get(API_SUB.AUTH_SETUP)
   setupStatus(): Promise<SetupStatus> {
@@ -93,8 +91,6 @@ export class AuthController {
     res.cookie(SESSION_COOKIE, await this.auth.sign(username), this.auth.cookieOptions());
     return { username };
   }
-
-  // ---- authenticated: session probe + auth settings ----
 
   @Get(API_SUB.AUTH_ME)
   me(@Req() req: Request & { user?: string }): Me {

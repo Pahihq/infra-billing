@@ -9,11 +9,8 @@ function colorFor(name: string): string {
   return COLORS[hash % COLORS.length];
 }
 
-/**
- * Provider icon: a colored initial avatar by default, replaced by the real favicon
- * only if it loads as an actual icon. Google's "no favicon" placeholder comes back
- * as a tiny (~16px) globe, so we reject anything that small to avoid the blurry globe.
- */
+// Colored initial avatar, swapped for the favicon only once it loads. Google's "no favicon"
+// placeholder is a ~16px globe, so reject anything that small to avoid the blurry globe.
 export function ProviderIcon({
   name,
   src,

@@ -1,6 +1,6 @@
 import { type CSSVariablesResolver, createTheme, type MantineColorsTuple } from '@mantine/core';
 
-// Brand palette from ascella.cloud; primary is #FB7BE2 (shade 6).
+// Brand palette; primary is #FB7BE2 (shade 6).
 const brand: MantineColorsTuple = [
   '#fff0fb',
   '#fbddf2',

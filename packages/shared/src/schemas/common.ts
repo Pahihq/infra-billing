@@ -6,9 +6,8 @@ export const uuidSchema = z.string().uuid();
 export const currencySchema = z.string().regex(/^[A-Z]{3}$/, 'ISO 4217 currency code');
 
 /**
- * Currencies the panel supports: offered in the UI pickers AND the only ones kept from the CBR rate
- * feed (it publishes ~55 daily; we fetch just these). RUB is the CBR base. Single list to edit when
- * adding/removing a currency everywhere.
+ * Supported currencies: UI pickers + the only ones kept from the CBR feed (it publishes ~55 daily).
+ * RUB is the CBR base. Edit here to add/remove a currency everywhere.
  */
 export const SUPPORTED_CURRENCIES = [
   'RUB',

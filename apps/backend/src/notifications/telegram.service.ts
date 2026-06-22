@@ -9,11 +9,8 @@ interface TelegramConfig {
   topicId: string;
 }
 
-/**
- * Outbound-only Telegram. Uses grammY's `Api` (no Bot/polling/webhook), HTML format. Config is
- * read dynamically from the in-panel settings (token AES-GCM encrypted) on every send, so changing
- * it in the panel takes effect without a restart. No env fallback — settings live in the DB.
- */
+// Outbound-only: grammY `Api`, no Bot/polling/webhook. Config (token AES-GCM encrypted) read from
+// panel settings on every send so edits apply without a restart. No env fallback — settings in DB.
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);

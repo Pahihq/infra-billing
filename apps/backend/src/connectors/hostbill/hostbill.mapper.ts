@@ -21,10 +21,7 @@ function parseInvoiceDate(s?: string): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
-/**
- * Map a HostBill billing cycle to our period. Cycles we don't model
- * (semi-annual/biennial/triennial) are normalized to a monthly-equivalent cost.
- */
+// Cycles we don't model (semi-annual/biennial/triennial) → monthly-equivalent cost.
 function resolveBilling(cycle: string, total: string): { period: string; cost: Decimal } {
   const t = new Decimal(total || 0);
   switch (cycle) {
@@ -48,7 +45,6 @@ function resolveBilling(cycle: string, total: string): { period: string; cost: D
   }
 }
 
-/** Map a HostBill service to our domain Service. */
 export function mapHostbillService(s: HostbillService): ServiceData {
   const { period, cost } = resolveBilling(s.billingcycle ?? 'Monthly', s.total ?? '0');
   return {
