@@ -183,6 +183,10 @@ export function ProvidersPage() {
       notifyError(t('providers.err.linodeToken'));
       return;
     }
+    if (!editing && v.kind === 'aeza' && !v.token) {
+      notifyError(t('providers.err.aezaToken'));
+      return;
+    }
     const creds = {
       token: v.token || undefined,
       baseUrl: v.baseUrl || undefined,
@@ -485,6 +489,13 @@ export function ProvidersPage() {
               <TextInput
                 label={t('providers.field.apiToken')}
                 description={t('providers.field.apiTokenDescLinode')}
+                placeholder={editing ? t('providers.keepEmpty') : ''}
+                {...form.getInputProps('token')}
+              />
+            ) : form.values.kind === 'aeza' ? (
+              <TextInput
+                label={t('providers.field.apiToken')}
+                description={t('providers.field.apiTokenDescAeza')}
                 placeholder={editing ? t('providers.keepEmpty') : ''}
                 {...form.getInputProps('token')}
               />

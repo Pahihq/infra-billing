@@ -44,6 +44,7 @@ export const providers = {
       apiTokenDescVultr: 'Vultr → Account → API. Whitelist the server IP if Access Control is on.',
       apiTokenDescLinode:
         'Linode → Account → API Tokens → create a Personal Access Token (read access to Account and Linodes)',
+      apiTokenDescAeza: 'Aeza panel → API Keys → create an API key',
       refreshToken: 'Refresh token (OAuth2)',
       refreshTokenDescNetcup:
         'Use “Authorize via netcup” above, or paste an offline refresh token manually',
@@ -69,6 +70,7 @@ export const providers = {
       vultrToken: 'Enter the Vultr API key',
       porkbunCreds: 'Enter the Porkbun API key and secret key',
       linodeToken: 'Enter the Linode API token',
+      aezaToken: 'Enter the Aeza API key',
     },
     netcup: {
       authorize: 'Authorize via netcup',
@@ -135,6 +137,7 @@ export const providers = {
         'Vultr → Account → API. Если включён Access Control — добавьте IP сервера в whitelist.',
       apiTokenDescLinode:
         'Linode → Account → API Tokens → создать Personal Access Token (доступ на чтение к Account и Linodes)',
+      apiTokenDescAeza: 'Панель Aeza → API Keys → создать API-ключ',
       refreshToken: 'Refresh-токен (OAuth2)',
       refreshTokenDescNetcup:
         'Нажмите «Авторизоваться через netcup» выше или вставьте offline refresh-токен вручную',
@@ -160,6 +163,7 @@ export const providers = {
       vultrToken: 'Укажите API-ключ Vultr',
       porkbunCreds: 'Укажите API-ключ и секретный ключ Porkbun',
       linodeToken: 'Укажите API-токен Linode',
+      aezaToken: 'Укажите API-ключ Aeza',
     },
     netcup: {
       authorize: 'Авторизоваться через netcup',

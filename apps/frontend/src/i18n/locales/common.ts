@@ -116,6 +116,7 @@ export const common = {
         porkbun: 'Porkbun',
         vultr: 'Vultr',
         linode: 'Linode',
+        aeza: 'Aeza',
         manual: 'Manual',
       },
       rateSource: {
@@ -239,6 +240,7 @@ export const common = {
         porkbun: 'Porkbun',
         vultr: 'Vultr',
         linode: 'Linode',
+        aeza: 'Aeza',
         manual: 'Ручной',
       },
       rateSource: {

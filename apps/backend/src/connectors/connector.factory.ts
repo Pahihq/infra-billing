@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AezaConnector } from './aeza/aeza.connector';
 import { FourVpsConnector } from './4vps/4vps.connector';
 import type { FourVpsCredentials } from './4vps/4vps.types';
 import { BegetConnector } from './beget/beget.connector';
@@ -61,6 +62,9 @@ export class ConnectorFactory {
       case 'linode':
         // Linode secret is the raw Personal Access Token (sent as the Authorization Bearer header).
         return new LinodeConnector(token);
+      case 'aeza':
+        // Aeza secret is the raw API key (single string, sent as the X-API-KEY header).
+        return new AezaConnector(token);
       default:
         throw new Error(`Connector for kind="${kind}" is not supported`);
     }
