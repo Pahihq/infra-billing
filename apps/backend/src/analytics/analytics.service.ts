@@ -138,6 +138,7 @@ export class AnalyticsService {
         serviceUuid: s.uuid,
         name: s.name,
         providerName: providerName.get(s.providerUuid) ?? '',
+        providerLoginUrl: provider?.loginUrl ?? null,
         nextBillingAt: s.nextBillingAt!.toISOString(),
         cost: new Decimal(s.cost.toString()).toFixed(2),
         currency: s.currency,

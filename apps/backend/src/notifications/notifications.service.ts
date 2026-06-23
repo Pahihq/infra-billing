@@ -55,13 +55,17 @@ export class NotificationsService {
     const errorRuns = await this.prisma.syncRun.findMany({
       where: { status: 'error', finishedAt: { gte: since } },
       orderBy: { finishedAt: 'desc' },
-      include: { provider: { select: { name: true } } },
+      include: { provider: { select: { name: true, loginUrl: true } } },
     });
     const seenProviders = new Set<string>();
     for (const run of errorRuns) {
       if (seenProviders.has(run.providerUuid)) continue;
       seenProviders.add(run.providerUuid);
-      const html = syncErrorMessage(run.provider.name, run.error ?? 'unknown error');
+      const html = syncErrorMessage(
+        run.provider.name,
+        run.error ?? 'unknown error',
+        run.provider.loginUrl,
+      );
       if (await this.maybeSend(`sync-error:${run.providerUuid}`, html)) sent += 1;
     }
 

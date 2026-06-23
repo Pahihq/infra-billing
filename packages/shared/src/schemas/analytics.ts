@@ -39,6 +39,8 @@ export const upcomingBillingSchema = z.object({
   serviceUuid: uuidSchema,
   name: z.string(),
   providerName: z.string(),
+  // Provider cabinet link (loginUrl) — used to deeplink the provider in Telegram alerts.
+  providerLoginUrl: z.string().nullable(),
   nextBillingAt: isoDateSchema,
   cost: moneySchema,
   currency: currencySchema,

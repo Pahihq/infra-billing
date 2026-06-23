@@ -21,6 +21,24 @@ export function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/** Validate a cabinet URL — only http(s) is safe to put in a Telegram <a href>. */
+function safeHttpUrl(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Provider name as a bold deeplink to its cabinet (loginUrl); plain bold if no valid URL. */
+export function providerLink(name: string, url?: string | null): string {
+  const label = `<b>${esc(name)}</b>`;
+  const href = safeHttpUrl(url);
+  return href ? `<a href="${esc(href)}">${label}</a>` : label;
+}
+
 function ruDays(n: number): string {
   const d10 = n % 10;
   const d100 = n % 100;
@@ -39,7 +57,7 @@ function whenLabel(daysUntil: number): string {
 export function lowBalanceMessage(ub: UpcomingBilling, baseCurrency: string): string {
   return (
     `${EMOJI.lowBalance} <b>Низкий баланс</b>\n\n` +
-    `${EMOJI.provider} <b>${esc(ub.providerName)}</b>\n` +
+    `${EMOJI.provider} ${providerLink(ub.providerName, ub.providerLoginUrl)}\n` +
     `${EMOJI.service} ${esc(ub.name)}\n\n` +
     `${EMOJI.clock} Списание <code>${esc(ub.costBase)} ${esc(baseCurrency)}</code> ${whenLabel(ub.daysUntil)} — баланса не хватит.\n` +
     `${EMOJI.balance} Баланс: <code>${esc(ub.providerBalance ?? '0')} ${esc(ub.providerBalanceCurrency ?? '')}</code>`
@@ -50,7 +68,7 @@ export function lowBalanceMessage(ub: UpcomingBilling, baseCurrency: string): st
 export function upcomingBillingMessage(ub: UpcomingBilling, day: string): string {
   return (
     `${EMOJI.upcoming} <b>Скоро списание</b>\n\n` +
-    `${EMOJI.provider} <b>${esc(ub.providerName)}</b>\n` +
+    `${EMOJI.provider} ${providerLink(ub.providerName, ub.providerLoginUrl)}\n` +
     `${EMOJI.service} ${esc(ub.name)}\n\n` +
     `${EMOJI.date} Дата: <code>${esc(day)}</code>\n` +
     `${EMOJI.amount} Сумма: <code>${esc(ub.cost)} ${esc(ub.currency)}</code>`
@@ -58,10 +76,14 @@ export function upcomingBillingMessage(ub: UpcomingBilling, day: string): string
 }
 
 /** Provider sync failure. */
-export function syncErrorMessage(providerName: string, error: string): string {
+export function syncErrorMessage(
+  providerName: string,
+  error: string,
+  loginUrl?: string | null,
+): string {
   return (
     `${EMOJI.syncError} <b>Ошибка синхронизации</b>\n\n` +
-    `${EMOJI.provider} Провайдер: <b>${esc(providerName)}</b>\n` +
+    `${EMOJI.provider} Провайдер: ${providerLink(providerName, loginUrl)}\n` +
     `${EMOJI.info} <code>${esc(error)}</code>`
   );
 }
@@ -77,6 +99,7 @@ export function sampleMessages(): string[] {
     serviceUuid: '00000000-0000-0000-0000-000000000000',
     name: 'demo-vps',
     providerName: 'Тестовый провайдер',
+    providerLoginUrl: 'https://example.com',
     nextBillingAt: `${inTwoDays}T00:00:00.000Z`,
     cost: '500.00',
     currency: 'RUB',
@@ -91,6 +114,6 @@ export function sampleMessages(): string[] {
     `${EMOJI.samples} <b>Проверка уведомлений</b> — примеры всех типов ниже:`,
     lowBalanceMessage(sample, 'RUB'),
     upcomingBillingMessage(sample, inTwoDays),
-    syncErrorMessage('Тестовый провайдер', 'HTTP 401: неверный API-токен'),
+    syncErrorMessage('Тестовый провайдер', 'HTTP 401: неверный API-токен', 'https://example.com'),
   ];
 }
