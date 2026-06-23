@@ -38,6 +38,10 @@ import { providerFavicon } from '@/utils/favicon';
 import { useCountryOptions } from '@/utils/countries';
 import { ProviderIcon } from '@/components/ProviderIcon';
 
+// Only physically-hosted resources carry a country — show the flag for these types only
+// (domains/licenses/etc. would otherwise render a meaningless blank flag).
+const LOCATED_TYPES = new Set(['vps', 'dedicated']);
+
 interface SForm {
   providerUuid: string;
   name: string;
@@ -240,7 +244,7 @@ export function ServicesPage() {
               <Table.Tr key={s.uuid} style={{ opacity: s.isActive ? 1 : 0.5 }}>
                 <Table.Td>
                   <Group gap={6}>
-                    <span>{countryFlag(s.countryCode)}</span>
+                    {LOCATED_TYPES.has(s.type) && <span>{countryFlag(s.countryCode)}</span>}
                     <Text fw={600}>{s.name}</Text>
                     {!s.isActive && (
                       <Badge size="xs" color="gray">
