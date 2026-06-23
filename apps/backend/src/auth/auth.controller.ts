@@ -16,6 +16,7 @@ import {
   API,
   API_SUB,
   type AuthConfig,
+  CONTROLLERS_INFO,
   ID_PARAM,
   type Me,
   type Passkey,
@@ -30,8 +31,17 @@ import { SetupDto } from './dto/setup.dto';
 import { UpdateAuthConfigDto } from './dto/update-auth-config.dto';
 import { PasskeyRegisterVerifyDto } from './dto/passkey-register-verify.dto';
 import { PasskeyLoginVerifyDto } from './dto/passkey-login-verify.dto';
+import { AuthConfigDto, MeDto, PasskeyDto, SetupStatusDto } from './dto/auth-response.dto';
 import { Public } from './public.decorator';
+import {
+  ApiBearerAuth,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags(CONTROLLERS_INFO.AUTH.TAG)
 @Controller(API.AUTH)
 export class AuthController {
   constructor(
@@ -40,12 +50,16 @@ export class AuthController {
     private readonly webauthn: WebAuthnService,
   ) {}
 
+  @ApiOperation({ summary: 'Get setup status' })
+  @ApiOkResponse({ type: SetupStatusDto })
   @Public()
   @Get(API_SUB.AUTH_SETUP)
   setupStatus(): Promise<SetupStatus> {
     return this.authConfig.getStatus();
   }
 
+  @ApiOperation({ summary: 'Complete initial setup' })
+  @ApiOkResponse({ type: MeDto })
   @Public()
   @Post(API_SUB.AUTH_SETUP)
   @HttpCode(200)
@@ -55,6 +69,8 @@ export class AuthController {
     return { username: dto.username };
   }
 
+  @ApiOperation({ summary: 'Log in with credentials' })
+  @ApiOkResponse({ type: MeDto })
   @Public()
   @Post(API_SUB.AUTH_LOGIN)
   @HttpCode(200)
@@ -66,6 +82,8 @@ export class AuthController {
     return { username: dto.username };
   }
 
+  @ApiOperation({ summary: 'Log out current session' })
+  @ApiNoContentResponse()
   @Public()
   @Post(API_SUB.AUTH_LOGOUT)
   @HttpCode(204)
@@ -73,6 +91,7 @@ export class AuthController {
     res.clearCookie(SESSION_COOKIE, this.auth.cookieOptions());
   }
 
+  @ApiOperation({ summary: 'Get passkey login options' })
   @Public()
   @Post(API_SUB.AUTH_PASSKEY_LOGIN_OPTIONS)
   @HttpCode(200)
@@ -80,6 +99,8 @@ export class AuthController {
     return this.webauthn.loginOptions();
   }
 
+  @ApiOperation({ summary: 'Verify passkey login' })
+  @ApiOkResponse({ type: MeDto })
   @Public()
   @Post(API_SUB.AUTH_PASSKEY_LOGIN_VERIFY)
   @HttpCode(200)
@@ -92,38 +113,58 @@ export class AuthController {
     return { username };
   }
 
+  @ApiOperation({ summary: 'Get current user' })
+  @ApiOkResponse({ type: MeDto })
+  @ApiBearerAuth()
   @Get(API_SUB.AUTH_ME)
   me(@Req() req: Request & { user?: string }): Me {
     return { username: req.user ?? '' };
   }
 
+  @ApiOperation({ summary: 'Get auth config' })
+  @ApiOkResponse({ type: AuthConfigDto })
+  @ApiBearerAuth()
   @Get(API_SUB.AUTH_CONFIG)
   getConfig(): Promise<AuthConfig> {
     return this.authConfig.getConfig();
   }
 
+  @ApiOperation({ summary: 'Update auth config' })
+  @ApiOkResponse({ type: AuthConfigDto })
+  @ApiBearerAuth()
   @Patch(API_SUB.AUTH_CONFIG)
   updateConfig(@Body() dto: UpdateAuthConfigDto): Promise<AuthConfig> {
     return this.authConfig.patchConfig(dto);
   }
 
+  @ApiOperation({ summary: 'Get passkey register options' })
+  @ApiBearerAuth()
   @Post(API_SUB.AUTH_PASSKEY_REGISTER_OPTIONS)
   @HttpCode(200)
   passkeyRegisterOptions(): Promise<unknown> {
     return this.webauthn.registerOptions();
   }
 
+  @ApiOperation({ summary: 'Verify passkey registration' })
+  @ApiOkResponse({ type: PasskeyDto })
+  @ApiBearerAuth()
   @Post(API_SUB.AUTH_PASSKEY_REGISTER_VERIFY)
   @HttpCode(200)
   passkeyRegisterVerify(@Body() dto: PasskeyRegisterVerifyDto): Promise<Passkey> {
     return this.webauthn.verifyRegistration(dto.response as RegistrationResponseJSON, dto.name);
   }
 
+  @ApiOperation({ summary: 'List passkeys' })
+  @ApiOkResponse({ type: [PasskeyDto] })
+  @ApiBearerAuth()
   @Get(API_SUB.AUTH_PASSKEYS)
   listPasskeys(): Promise<Passkey[]> {
     return this.webauthn.list();
   }
 
+  @ApiOperation({ summary: 'Delete a passkey' })
+  @ApiNoContentResponse()
+  @ApiBearerAuth()
   @Delete(API_SUB.AUTH_PASSKEY_BY_ID)
   @HttpCode(204)
   deletePasskey(@Param(ID_PARAM) uuid: string): Promise<void> {

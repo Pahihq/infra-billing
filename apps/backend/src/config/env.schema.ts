@@ -19,6 +19,12 @@ export const envSchema = z.object({
   APP_VERSION: z.string().default('dev'),
   BUILD_TIME: z.string().default(''),
   GIT_COMMIT: z.string().default(''),
+
+  // Expose the Swagger UI at /api/docs when enabled (opt-in; public when on).
+  DOCS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type Env = z.infer<typeof envSchema>;

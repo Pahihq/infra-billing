@@ -19,6 +19,7 @@ export const common = {
       singleUser: 'root',
       logout: 'Log out',
       starOnGithub: 'Star on GitHub',
+      apiDocs: 'API docs',
     },
     theme: {
       dark: 'Dark theme',
@@ -138,6 +139,7 @@ export const common = {
       singleUser: 'root',
       logout: 'Выйти',
       starOnGithub: 'Звезда на GitHub',
+      apiDocs: 'Документация API',
     },
     theme: {
       dark: 'Тёмная тема',

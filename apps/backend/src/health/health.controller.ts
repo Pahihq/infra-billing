@@ -1,15 +1,20 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
-import { API } from '@infra/shared';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { API, CONTROLLERS_INFO } from '@infra/shared';
 import { Health } from '@infra/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { Public } from '../auth/public.decorator';
+import { HealthDto } from './dto/health.dto';
 
+@ApiTags(CONTROLLERS_INFO.HEALTH.TAG)
 @Controller(API.HEALTH)
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Public()
   @Get()
+  @ApiOperation({ summary: 'Health check' })
+  @ApiOkResponse({ type: HealthDto })
   async health(): Promise<Health> {
     try {
       await this.prisma.$queryRaw`SELECT 1`;

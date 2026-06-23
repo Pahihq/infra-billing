@@ -2,11 +2,13 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import {
   createServiceSchema,
+  serviceSchema,
   serviceTypeSchema,
   updateServiceSchema,
   uuidSchema,
 } from '@infra/shared';
 
+export class ServiceDto extends createZodDto(serviceSchema) {}
 export class CreateServiceDto extends createZodDto(createServiceSchema) {}
 export class UpdateServiceDto extends createZodDto(updateServiceSchema) {}
 

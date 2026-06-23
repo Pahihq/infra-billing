@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink as RouterNavLink, Outlet, useLocation } from 'react-router-dom';
 import { useLogout, useMe } from '@/api/auth';
 import { BuildInfo } from '@/components/BuildInfo';
+import { DocsLink } from '@/components/DocsLink';
 import { GithubStars } from '@/components/GithubStars';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -87,6 +88,7 @@ export function AppLayout() {
             <Box visibleFrom="sm">
               <GithubStars />
             </Box>
+            <DocsLink />
             <ThemeToggle />
             <LanguageSwitcher />
             <Box visibleFrom="sm">

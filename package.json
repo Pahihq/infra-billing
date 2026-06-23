@@ -31,6 +31,9 @@
   "engines": {
     "node": ">=22"
   },
+  "dependencies": {
+    "@nestjs/swagger": "11.2.6"
+  },
   "devDependencies": {
     "@biomejs/biome": "2.5.0"
   }

@@ -22,12 +22,23 @@ export class AppConfigService {
     return this.env.ENCRYPTION_KEY;
   }
 
-  get buildInfo(): { version: string; buildTime: string; gitCommit: string; nodeVersion: string } {
+  get docs(): boolean {
+    return this.env.DOCS;
+  }
+
+  get buildInfo(): {
+    version: string;
+    buildTime: string;
+    gitCommit: string;
+    nodeVersion: string;
+    docs: boolean;
+  } {
     return {
       version: this.env.APP_VERSION,
       buildTime: this.env.BUILD_TIME,
       gitCommit: this.env.GIT_COMMIT,
       nodeVersion: process.version,
+      docs: this.env.DOCS,
     };
   }
 }

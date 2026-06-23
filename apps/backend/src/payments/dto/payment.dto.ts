@@ -1,8 +1,17 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { createPaymentSchema, uuidSchema } from '@infra/shared';
+import {
+  createPaymentSchema,
+  paginatedPaymentsSchema,
+  paymentSchema,
+  uuidSchema,
+} from '@infra/shared';
 
 export class CreatePaymentDto extends createZodDto(createPaymentSchema) {}
+
+export class PaymentDto extends createZodDto(paymentSchema) {}
+
+export class PaginatedPaymentsDto extends createZodDto(paginatedPaymentsSchema) {}
 
 export const paymentQuerySchema = z.object({
   providerUuid: uuidSchema.optional(),

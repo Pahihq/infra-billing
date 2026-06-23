@@ -3,12 +3,12 @@ import { syncStatusSchema } from '../enums';
 import { isoDateSchema, uuidSchema } from './common';
 
 export const syncRunSchema = z.object({
-  id: z.string(), // BigInt serialized as string
-  providerUuid: uuidSchema,
-  status: syncStatusSchema,
-  servicesFound: z.number().int(),
-  error: z.string().nullable(),
-  startedAt: isoDateSchema,
-  finishedAt: isoDateSchema.nullable(),
+  id: z.string().describe('Sync run ID'), // BigInt serialized as string
+  providerUuid: uuidSchema.describe('Provider UUID'),
+  status: syncStatusSchema.describe('Sync status'),
+  servicesFound: z.number().int().describe('Services found count'),
+  error: z.string().describe('Sync error message').nullable(),
+  startedAt: isoDateSchema.describe('Sync start time'),
+  finishedAt: isoDateSchema.describe('Sync finish time').nullable(),
 });
 export type SyncRun = z.infer<typeof syncRunSchema>;

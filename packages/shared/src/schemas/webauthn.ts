@@ -5,12 +5,12 @@ import { z } from 'zod';
 // only drift. Validate just the fields we read (e.g. the optional passkey name).
 
 export const passkeyRegisterVerifySchema = z.object({
-  response: z.unknown(),
-  name: z.string().max(64).optional(),
+  response: z.unknown().describe('Registration ceremony response'),
+  name: z.string().max(64).describe('Passkey display name').optional(),
 });
 export type PasskeyRegisterVerify = z.infer<typeof passkeyRegisterVerifySchema>;
 
 export const passkeyLoginVerifySchema = z.object({
-  response: z.unknown(),
+  response: z.unknown().describe('Authentication ceremony response'),
 });
 export type PasskeyLoginVerify = z.infer<typeof passkeyLoginVerifySchema>;

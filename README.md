@@ -130,6 +130,7 @@ docker compose exec infra-billing cli reset-admin --yes
 | `POSTGRES_HOST_PORT` | Порт публикации Postgres на `127.0.0.1` (default 5432) |
 | `DATABASE_URL` | Строка подключения Prisma (хост = `infra-billing-db` в docker, `127.0.0.1` локально) |
 | `ENCRYPTION_KEY` | **Обязательно.** AES-256-GCM ключ для секретов в БД — токены провайдеров и секрет сессии (32 байта base64) |
+| `DOCS` | `true` — включить Swagger UI на `/api/docs` (публично при включении). Default `false` |
 
 ---
 

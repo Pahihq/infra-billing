@@ -2,33 +2,33 @@ import { z } from 'zod';
 import { currencySchema, isoDateSchema, moneySchema, uuidSchema } from './common';
 
 export const byProviderSchema = z.object({
-  providerUuid: uuidSchema,
-  name: z.string(),
-  monthlyCost: moneySchema,
+  providerUuid: uuidSchema.describe('Provider UUID'),
+  name: z.string().describe('Provider name'),
+  monthlyCost: moneySchema.describe('Monthly cost in base currency'),
   // Total paid out to this provider (top-ups + manual payments) in base currency.
-  spent: moneySchema,
-  balance: moneySchema.nullable(),
-  balanceCurrency: currencySchema.nullable(),
-  servicesCount: z.number().int(),
+  spent: moneySchema.describe('Total spent in base currency'),
+  balance: moneySchema.describe('Account balance').nullable(),
+  balanceCurrency: currencySchema.describe('Balance currency').nullable(),
+  servicesCount: z.number().int().describe('Number of services'),
 });
 
 export const byCountrySchema = z.object({
-  countryCode: z.string(),
-  monthlyCost: moneySchema,
-  servicesCount: z.number().int(),
+  countryCode: z.string().describe('ISO country code'),
+  monthlyCost: moneySchema.describe('Monthly cost in base currency'),
+  servicesCount: z.number().int().describe('Number of services'),
 });
 
 export const byTypeSchema = z.object({
-  type: z.string(),
-  monthlyCost: moneySchema,
-  servicesCount: z.number().int(),
+  type: z.string().describe('Service type'),
+  monthlyCost: moneySchema.describe('Monthly cost in base currency'),
+  servicesCount: z.number().int().describe('Number of services'),
 });
 
 export const byCurrencySchema = z.object({
-  currency: currencySchema,
-  monthlyCostOriginal: moneySchema,
-  monthlyCostBase: moneySchema,
-  servicesCount: z.number().int(),
+  currency: currencySchema.describe('Currency code'),
+  monthlyCostOriginal: moneySchema.describe('Monthly cost in original currency'),
+  monthlyCostBase: moneySchema.describe('Monthly cost in base currency'),
+  servicesCount: z.number().int().describe('Number of services'),
 });
 
 /** critical = balance won't cover an imminent charge; warning = very soon / underfunded. */
@@ -36,43 +36,46 @@ export const billingSeveritySchema = z.enum(['critical', 'warning', 'ok']);
 export type BillingSeverity = z.infer<typeof billingSeveritySchema>;
 
 export const upcomingBillingSchema = z.object({
-  serviceUuid: uuidSchema,
-  name: z.string(),
-  providerName: z.string(),
+  serviceUuid: uuidSchema.describe('Service UUID'),
+  name: z.string().describe('Service name'),
+  providerName: z.string().describe('Provider name'),
   // Provider cabinet link (loginUrl) — used to deeplink the provider in Telegram alerts.
-  providerLoginUrl: z.string().nullable(),
-  nextBillingAt: isoDateSchema,
-  cost: moneySchema,
-  currency: currencySchema,
-  costBase: moneySchema,
-  daysUntil: z.number().int(),
-  providerBalance: moneySchema.nullable(),
-  providerBalanceCurrency: currencySchema.nullable(),
+  providerLoginUrl: z.string().describe('Provider cabinet link').nullable(),
+  nextBillingAt: isoDateSchema.describe('Next billing date'),
+  cost: moneySchema.describe('Cost in service currency'),
+  currency: currencySchema.describe('Service currency'),
+  costBase: moneySchema.describe('Cost in base currency'),
+  daysUntil: z.number().int().describe('Days until billing'),
+  providerBalance: moneySchema.describe('Provider balance').nullable(),
+  providerBalanceCurrency: currencySchema.describe('Provider balance currency').nullable(),
   // null = provider exposes no balance (e.g. Hetzner) → coverage unknown.
-  covered: z.boolean().nullable(),
-  severity: billingSeveritySchema,
+  covered: z.boolean().describe('Balance covers charge').nullable(),
+  severity: billingSeveritySchema.describe('Billing severity level'),
 });
 
 export const analyticsSummarySchema = z.object({
-  baseCurrency: currencySchema,
-  monthlyTotal: moneySchema,
-  yearlyProjection: moneySchema,
-  currentMonthPayments: moneySchema,
-  totalSpent: moneySchema,
-  byProvider: z.array(byProviderSchema),
-  byCountry: z.array(byCountrySchema),
-  byType: z.array(byTypeSchema),
-  byCurrency: z.array(byCurrencySchema),
-  upcomingBillings: z.array(upcomingBillingSchema),
+  baseCurrency: currencySchema.describe('Base currency code'),
+  monthlyTotal: moneySchema.describe('Total monthly cost'),
+  yearlyProjection: moneySchema.describe('Projected yearly cost'),
+  currentMonthPayments: moneySchema.describe('Payments this month'),
+  totalSpent: moneySchema.describe('Total spent overall'),
+  byProvider: z.array(byProviderSchema).describe('Breakdown by provider'),
+  byCountry: z.array(byCountrySchema).describe('Breakdown by country'),
+  byType: z.array(byTypeSchema).describe('Breakdown by service type'),
+  byCurrency: z.array(byCurrencySchema).describe('Breakdown by currency'),
+  upcomingBillings: z.array(upcomingBillingSchema).describe('Upcoming billings'),
 });
 export type AnalyticsSummary = z.infer<typeof analyticsSummarySchema>;
 
-export const forecastPointSchema = z.object({ month: z.string(), projected: moneySchema });
+export const forecastPointSchema = z.object({
+  month: z.string().describe('Forecast month'),
+  projected: moneySchema.describe('Projected cost'),
+});
 export type ForecastPoint = z.infer<typeof forecastPointSchema>;
 
 export const balancePointSchema = z.object({
-  balance: moneySchema,
-  currency: currencySchema,
-  capturedAt: isoDateSchema,
+  balance: moneySchema.describe('Balance amount'),
+  currency: currencySchema.describe('Balance currency'),
+  capturedAt: isoDateSchema.describe('Snapshot timestamp'),
 });
 export type BalancePoint = z.infer<typeof balancePointSchema>;

@@ -1,8 +1,12 @@
 import { Controller, HttpCode, Post } from '@nestjs/common';
-import { API, API_SUB } from '@infra/shared';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { API, API_SUB, CONTROLLERS_INFO } from '@infra/shared';
+import { NotificationResultDto } from './dto/notification.dto';
 import { NotificationsService } from './notifications.service';
 import { TelegramService } from './telegram.service';
 
+@ApiTags(CONTROLLERS_INFO.NOTIFICATIONS.TAG)
+@ApiBearerAuth()
 @Controller(API.NOTIFICATIONS)
 export class NotificationsController {
   constructor(
@@ -11,6 +15,8 @@ export class NotificationsController {
   ) {}
 
   /** Run the alert checks now (and report how many messages were sent). */
+  @ApiOperation({ summary: 'Run notification checks' })
+  @ApiOkResponse({ type: NotificationResultDto })
   @Post(API_SUB.NOTIFICATIONS_CHECK)
   @HttpCode(200)
   async check() {
@@ -19,6 +25,8 @@ export class NotificationsController {
   }
 
   /** Send a sample of every notification type (preview formats + verify Telegram config). */
+  @ApiOperation({ summary: 'Send sample notifications' })
+  @ApiOkResponse({ type: NotificationResultDto })
   @Post(API_SUB.NOTIFICATIONS_TEST)
   @HttpCode(200)
   async test() {

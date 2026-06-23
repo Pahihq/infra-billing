@@ -4,27 +4,27 @@ import { currencySchema, isoDateSchema, moneySchema, uuidSchema } from './common
 
 /** Provider as returned by the API. The API token is NEVER returned. */
 export const providerSchema = z.object({
-  uuid: uuidSchema,
-  name: z.string(),
-  kind: providerKindSchema,
-  faviconLink: z.string().nullable(),
-  loginUrl: z.string().nullable(),
-  balance: moneySchema.nullable(),
-  balanceCurrency: currencySchema.nullable(),
-  balanceSyncedAt: isoDateSchema.nullable(),
-  lastSyncAt: isoDateSchema.nullable(),
-  lastSyncError: z.string().nullable(),
-  servicesCount: z.number().int().nonnegative().optional(),
-  paymentsCount: z.number().int().nonnegative().optional(),
+  uuid: uuidSchema.describe('Provider UUID'),
+  name: z.string().describe('Display name'),
+  kind: providerKindSchema.describe('Connector kind'),
+  faviconLink: z.string().describe('Favicon URL').nullable(),
+  loginUrl: z.string().describe('Control panel URL').nullable(),
+  balance: moneySchema.describe('Account balance').nullable(),
+  balanceCurrency: currencySchema.describe('Balance currency').nullable(),
+  balanceSyncedAt: isoDateSchema.describe('Balance update time').nullable(),
+  lastSyncAt: isoDateSchema.describe('Last successful sync').nullable(),
+  lastSyncError: z.string().describe('Last sync error').nullable(),
+  servicesCount: z.number().int().nonnegative().describe('Number of services').optional(),
+  paymentsCount: z.number().int().nonnegative().describe('Number of payments').optional(),
   // Non-secret credential hints (hostbill/billmgr/selectel/4vps) so the edit form can prefill them.
   // The password, totpSecret and token are NEVER returned.
-  baseUrl: z.string().nullable().optional(),
-  username: z.string().nullable().optional(),
-  accountId: z.string().nullable().optional(),
-  projectName: z.string().nullable().optional(),
-  panelId: z.string().nullable().optional(),
-  createdAt: isoDateSchema,
-  updatedAt: isoDateSchema,
+  baseUrl: z.string().describe('API base URL').nullable().optional(),
+  username: z.string().describe('Account username').nullable().optional(),
+  accountId: z.string().describe('Selectel account number').nullable().optional(),
+  projectName: z.string().describe('Cloud project name').nullable().optional(),
+  panelId: z.string().describe('Billing panel id').nullable().optional(),
+  createdAt: isoDateSchema.describe('Creation time'),
+  updatedAt: isoDateSchema.describe('Last update time'),
 });
 export type Provider = z.infer<typeof providerSchema>;
 
@@ -35,32 +35,32 @@ export type Provider = z.infer<typeof providerSchema>;
 // (OTP 2FA) and `apiPassword` (the separate panel API password — enables the balance lookup).
 // None are ever echoed back.
 const credentialFields = {
-  token: z.string().min(1).optional(),
-  baseUrl: z.string().url().optional(),
-  username: z.string().min(1).optional(),
-  password: z.string().min(1).optional(),
-  totpSecret: z.string().min(1).optional(),
+  token: z.string().min(1).describe('API token').optional(),
+  baseUrl: z.string().url().describe('API base URL').optional(),
+  username: z.string().min(1).describe('Account username').optional(),
+  password: z.string().min(1).describe('Account password').optional(),
+  totpSecret: z.string().min(1).describe('TOTP secret seed').optional(),
   // Selectel: account number (Keystone domain) for the service user, and the optional Cloud
   // Platform project name (enables cloud/OpenStack server listing).
-  accountId: z.string().min(1).optional(),
-  projectName: z.string().min(1).optional(),
+  accountId: z.string().min(1).describe('Selectel account number').optional(),
+  projectName: z.string().min(1).describe('Cloud project name').optional(),
   // 4VPS: panel id (which billing panel the API key belongs to). Combined with `token`.
-  panelId: z.string().min(1).optional(),
+  panelId: z.string().min(1).describe('Billing panel id').optional(),
   // Beget: the separate panel "Beget API" password (legacy hosting API) — enables balance sync.
-  apiPassword: z.string().min(1).optional(),
+  apiPassword: z.string().min(1).describe('Beget API password').optional(),
 };
 
 export const createProviderSchema = z.object({
-  name: z.string().min(1),
-  kind: providerKindSchema,
-  loginUrl: z.string().url().optional(),
+  name: z.string().min(1).describe('Display name'),
+  kind: providerKindSchema.describe('Connector kind'),
+  loginUrl: z.string().url().describe('Control panel URL').optional(),
   ...credentialFields,
 });
 export type CreateProvider = z.infer<typeof createProviderSchema>;
 
 export const updateProviderSchema = z.object({
-  name: z.string().min(1).optional(),
-  loginUrl: z.string().url().nullable().optional(),
+  name: z.string().min(1).describe('Display name').optional(),
+  loginUrl: z.string().url().describe('Control panel URL').nullable().optional(),
   ...credentialFields,
 });
 export type UpdateProvider = z.infer<typeof updateProviderSchema>;

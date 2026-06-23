@@ -6,33 +6,33 @@ export const paymentTypeSchema = z.enum(['topup', 'charge']);
 export type PaymentType = z.infer<typeof paymentTypeSchema>;
 
 export const paymentSchema = z.object({
-  uuid: uuidSchema,
-  providerUuid: uuidSchema,
-  serviceUuid: uuidSchema.nullable(),
-  amount: moneySchema,
-  currency: currencySchema,
-  description: z.string().nullable(),
-  paymentDate: isoDateSchema,
-  type: paymentTypeSchema,
-  externalId: z.string().nullable(),
-  createdAt: isoDateSchema,
-  updatedAt: isoDateSchema,
+  uuid: uuidSchema.describe('Payment UUID'),
+  providerUuid: uuidSchema.describe('Provider UUID'),
+  serviceUuid: uuidSchema.describe('Service UUID').nullable(),
+  amount: moneySchema.describe('Payment amount'),
+  currency: currencySchema.describe('Currency code'),
+  description: z.string().describe('Payment description').nullable(),
+  paymentDate: isoDateSchema.describe('Payment date'),
+  type: paymentTypeSchema.describe('Payment type'),
+  externalId: z.string().describe('Provider record ID').nullable(),
+  createdAt: isoDateSchema.describe('Creation timestamp'),
+  updatedAt: isoDateSchema.describe('Last update timestamp'),
 });
 export type Payment = z.infer<typeof paymentSchema>;
 
 /** Paginated payments response (GET /api/payments). */
 export const paginatedPaymentsSchema = z.object({
-  items: z.array(paymentSchema),
-  total: z.number().int().nonnegative(),
+  items: z.array(paymentSchema).describe('Payments on this page'),
+  total: z.number().int().nonnegative().describe('Total payments count'),
 });
 export type PaginatedPayments = z.infer<typeof paginatedPaymentsSchema>;
 
 export const createPaymentSchema = z.object({
-  providerUuid: uuidSchema,
-  serviceUuid: uuidSchema.optional(),
-  amount: moneySchema,
-  currency: currencySchema,
-  description: z.string().optional(),
-  paymentDate: isoDateSchema,
+  providerUuid: uuidSchema.describe('Provider UUID'),
+  serviceUuid: uuidSchema.describe('Service UUID').optional(),
+  amount: moneySchema.describe('Payment amount'),
+  currency: currencySchema.describe('Currency code'),
+  description: z.string().describe('Payment description').optional(),
+  paymentDate: isoDateSchema.describe('Payment date'),
 });
 export type CreatePayment = z.infer<typeof createPaymentSchema>;

@@ -1,5 +1,6 @@
 export * from './enums';
 export * from './routes';
+export * from './controllers-info';
 export * from './schemas/common';
 export * from './schemas/provider';
 export * from './schemas/netcup';
