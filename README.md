@@ -8,7 +8,7 @@
 ## Возможности
 
 - **Провайдеры с API:** Timeweb Cloud, Hetzner Cloud, netcup, HostBill, ISPsystem BILLmanager,
-  Selectel, 4VPS.SU, Netlen, Beget Cloud, Vultr. Плюс **Manual** — провайдеры без API ведутся руками.
+  Selectel, 4VPS.SU, Netlen, Beget Cloud, Porkbun, Vultr. Плюс **Manual** — провайдеры без API ведутся руками.
 - **Автосинк** (по расписанию + кнопкой): баланс + валюта аккаунта, список серверов/услуг, даты
   следующих списаний; история баланса по дням (снапшоты).
 - **Импорт платежей** там, где API отдаёт реестр (BILLmanager — пополнения и списания, HostBill —
@@ -169,6 +169,9 @@ curl -H "Authorization: Bearer ib_…" https://infra-billing/api/providers
   если включена 2FA по приложению, и отдельный «API-пароль» из панели (Аккаунт → Безопасность →
   Beget API) — он включает синк баланса. Тянет VPS и облачные сервисы (БД/S3/CDN), цены в RUB;
   истории платежей и дат списаний в API нет.
+- **Porkbun** — API key + Secret API key (Account → API Access; ключ нужно включить на каждом домене).
+  Регистратор доменов: тянет домены (`type=domain`, дата продления = дата истечения), баланс (USD)
+  и цену продления по TLD. Истории платежей в API нет.
 - **Vultr** — API-ключ (Account → API). Если на ключе включён Access Control — добавьте IP сервера
   в whitelist, иначе запросы отклоняются (403). Тянет баланс (USD), серверы (цена из тарифа) и
   реестр billing-history (пополнения и списания); страна определяется по региону.

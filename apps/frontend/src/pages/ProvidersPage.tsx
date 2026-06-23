@@ -57,6 +57,7 @@ interface FormValues {
   projectName: string;
   panelId: string;
   apiPassword: string;
+  secretKey: string;
 }
 
 const EMPTY_FORM: FormValues = {
@@ -72,6 +73,7 @@ const EMPTY_FORM: FormValues = {
   projectName: '',
   panelId: '',
   apiPassword: '',
+  secretKey: '',
 };
 
 // The default Mantine/recharts Y-axis starts at 0, so a near-flat balance line (e.g. a steady 36)
@@ -173,6 +175,10 @@ export function ProvidersPage() {
       notifyError(t('providers.err.vultrToken'));
       return;
     }
+    if (!editing && v.kind === 'porkbun' && !(v.token && v.secretKey)) {
+      notifyError(t('providers.err.porkbunCreds'));
+      return;
+    }
     const creds = {
       token: v.token || undefined,
       baseUrl: v.baseUrl || undefined,
@@ -183,6 +189,7 @@ export function ProvidersPage() {
       projectName: v.projectName || undefined,
       panelId: v.panelId || undefined,
       apiPassword: v.apiPassword || undefined,
+      secretKey: v.secretKey || undefined,
     };
     try {
       let saved: Provider;
@@ -493,6 +500,20 @@ export function ProvidersPage() {
                   description={t('providers.field.begetApiPasswordDesc')}
                   placeholder={editing ? t('providers.keepEmpty') : t('common.optional')}
                   {...form.getInputProps('apiPassword')}
+                />
+              </>
+            ) : form.values.kind === 'porkbun' ? (
+              <>
+                <TextInput
+                  label={t('providers.field.porkbunApiKey')}
+                  description={t('providers.field.porkbunApiKeyDesc')}
+                  placeholder={editing ? t('providers.keepEmpty') : ''}
+                  {...form.getInputProps('token')}
+                />
+                <PasswordInput
+                  label={t('providers.field.porkbunSecretKey')}
+                  placeholder={editing ? t('providers.keepEmpty') : ''}
+                  {...form.getInputProps('secretKey')}
                 />
               </>
             ) : (

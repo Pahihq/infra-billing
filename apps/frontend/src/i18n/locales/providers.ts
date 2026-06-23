@@ -52,6 +52,9 @@ export const providers = {
       begetApiPassword: 'API password (optional, for balance)',
       begetApiPasswordDesc:
         'Separate "Beget API" password from the panel (Account → Security → Beget API) — enables balance sync',
+      porkbunApiKey: 'API key',
+      porkbunApiKeyDesc: 'Porkbun → Account → API Access → create an API key',
+      porkbunSecretKey: 'Secret API key',
       loginUrl: 'Account link',
     },
     keepEmpty: 'leave empty to keep unchanged',
@@ -62,6 +65,7 @@ export const providers = {
       netcupToken: 'Authorize via netcup or paste a refresh token',
       begetCreds: 'Enter the Beget login and password',
       vultrToken: 'Enter the Vultr API key',
+      porkbunCreds: 'Enter the Porkbun API key and secret key',
     },
     netcup: {
       authorize: 'Authorize via netcup',
@@ -136,6 +140,9 @@ export const providers = {
       begetApiPassword: 'API-пароль (необязательно, для баланса)',
       begetApiPasswordDesc:
         'Отдельный пароль «Beget API» из панели (Аккаунт → Безопасность → Beget API) — включает синк баланса',
+      porkbunApiKey: 'API-ключ',
+      porkbunApiKeyDesc: 'Porkbun → Account → API Access → создать API-ключ',
+      porkbunSecretKey: 'Секретный API-ключ',
       loginUrl: 'Ссылка на ЛК',
     },
     keepEmpty: 'оставьте пустым, чтобы не менять',
@@ -146,6 +153,7 @@ export const providers = {
       netcupToken: 'Авторизуйтесь через netcup или вставьте refresh-токен',
       begetCreds: 'Укажите логин и пароль Beget',
       vultrToken: 'Укажите API-ключ Vultr',
+      porkbunCreds: 'Укажите API-ключ и секретный ключ Porkbun',
     },
     netcup: {
       authorize: 'Авторизоваться через netcup',

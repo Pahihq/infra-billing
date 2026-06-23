@@ -111,6 +111,7 @@ export class ProvidersService {
       projectName?: string;
       panelId?: string;
       apiPassword?: string;
+      secretKey?: string;
     },
     existingEnc?: Uint8Array | null,
   ): Uint8Array<ArrayBuffer> | null {
@@ -176,6 +177,17 @@ export class ProvidersService {
       const apiPassword = dto.apiPassword ?? base.apiPassword;
       if (apiPassword) creds.apiPassword = apiPassword;
       return this.crypto.encrypt(JSON.stringify(creds));
+    }
+    if (kind === 'porkbun') {
+      // JSON { apiKey, secretApiKey } — `token` carries the API key. Merge so a partial edit works.
+      if (!dto.token && !dto.secretKey) return null;
+      const base = this.decodeCredentials(existingEnc);
+      const apiKey = dto.token ?? base.apiKey;
+      const secretApiKey = dto.secretKey ?? base.secretApiKey;
+      if (!apiKey || !secretApiKey) {
+        throw new BadRequestException('Provide both the Porkbun API key and secret key');
+      }
+      return this.crypto.encrypt(JSON.stringify({ apiKey, secretApiKey }));
     }
     if (kind !== 'manual' && dto.token) return this.crypto.encrypt(dto.token);
     return null;

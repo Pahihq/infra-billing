@@ -48,6 +48,8 @@ const credentialFields = {
   panelId: z.string().min(1).describe('Billing panel id').optional(),
   // Beget: the separate panel "Beget API" password (legacy hosting API) — enables balance sync.
   apiPassword: z.string().min(1).describe('Beget API password').optional(),
+  // Porkbun: the secret API key, paired with `token` (the API key).
+  secretKey: z.string().min(1).describe('Secret API key').optional(),
 };
 
 export const createProviderSchema = z.object({

@@ -11,6 +11,8 @@ import { HostbillConnector } from './hostbill/hostbill.connector';
 import type { HostbillCredentials } from './hostbill/hostbill.types';
 import { NetcupConnector } from './netcup/netcup.connector';
 import { NetlenConnector } from './netlen/netlen.connector';
+import { PorkbunConnector } from './porkbun/porkbun.connector';
+import type { PorkbunCredentials } from './porkbun/porkbun.types';
 import { SelectelConnector } from './selectel/selectel.connector';
 import type { SelectelCredentials } from './selectel/selectel.types';
 import { TimewebConnector } from './timeweb/timeweb.connector';
@@ -49,6 +51,9 @@ export class ConnectorFactory {
       case 'beget':
         // Beget secret is JSON: { username (login), password, totpSecret?, apiPassword? }.
         return new BegetConnector(JSON.parse(token) as BegetCredentials);
+      case 'porkbun':
+        // Porkbun secret is JSON: { apiKey, secretApiKey } (X-API-Key / X-Secret-API-Key headers).
+        return new PorkbunConnector(JSON.parse(token) as PorkbunCredentials);
       case 'vultr':
         // Vultr secret is the raw API key (single string, sent as the Authorization Bearer header).
         return new VultrConnector(token);
