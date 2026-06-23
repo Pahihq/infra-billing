@@ -65,11 +65,32 @@ export class HostbillConnector implements Connector {
     const headers = await this.authHeaders(signal);
     const { data } = await this.http.get<BalanceResponse>('balance', { headers, signal });
     const d = data?.details ?? {};
+    // /balance frequently returns an empty currency — fall back to the account's
+    // real currency from invoices (e.g. TRY), not a blanket USD.
+    let currency = normalizeCurrency(d.currency, ''); // '' = unknown
+    if (!currency) {
+      currency = (await this.accountCurrencyFromInvoices(signal)) ?? HOSTBILL_FALLBACK_CURRENCY;
+    }
     // acc_credit = prepaid funds available to the client.
     return {
       balance: new Decimal(d.acc_credit ?? d.acc_balance ?? 0),
-      currency: normalizeCurrency(d.currency, HOSTBILL_FALLBACK_CURRENCY),
+      currency,
     };
+  }
+
+  /** Account currency from the first invoice that has one (an account has a single currency). */
+  private async accountCurrencyFromInvoices(signal: AbortSignal): Promise<string | null> {
+    try {
+      const headers = await this.authHeaders(signal);
+      const { data } = await this.http.get<InvoicesResponse>('invoice', { headers, signal });
+      for (const inv of data?.invoices ?? []) {
+        const c = normalizeCurrency(inv.currency, '');
+        if (c) return c;
+      }
+    } catch {
+      // best-effort — a failing /invoice must not break balance sync
+    }
+    return null;
   }
 
   async fetchServices(signal: AbortSignal): Promise<ServiceData[]> {
