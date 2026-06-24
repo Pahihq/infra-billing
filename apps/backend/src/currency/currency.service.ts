@@ -1,15 +1,21 @@
+import { dateToIso } from '@common/serialize';
+import { ExchangeRate } from '@generated/prisma/client';
+import { Rate } from '@infra/shared';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { ExchangeRate } from '@generated/prisma/client';
 import Decimal from 'decimal.js';
-import { Rate } from '@infra/shared';
 import { PrismaService } from '../prisma/prisma.service';
-import { dateToIso } from '@common/serialize';
 import { CbrRateProvider } from './cbr.rate-provider';
 
 const RATE_BASE = 'RUB'; // CBR works in RUB; all stored rates are RUB-per-code.
 const ONE = new Decimal(1);
 const REFRESH_TIMEOUT_MS = 15_000;
+// Container egress is often not ready in the first seconds after boot, so retry the startup
+// refresh a few times before giving up.
+const STARTUP_REFRESH_ATTEMPTS = 3;
+const STARTUP_REFRESH_DELAY_MS = 5_000;
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 @Injectable()
 export class CurrencyService implements OnApplicationBootstrap {
@@ -20,18 +26,30 @@ export class CurrencyService implements OnApplicationBootstrap {
     private readonly cbr: CbrRateProvider,
   ) {}
 
-  /** Refresh rates on startup (best-effort, fire-and-forget — never blocks/crashes boot). */
   onApplicationBootstrap(): void {
-    void this.refreshRates()
-      .then((n) => {
+    void this.refreshOnStartup();
+  }
+
+  private async refreshOnStartup(): Promise<void> {
+    for (let attempt = 1; attempt <= STARTUP_REFRESH_ATTEMPTS; attempt++) {
+      try {
+        const n = await this.refreshRates();
         if (n > 0) this.logger.log(`Rates refreshed on startup: ${n}`);
-      })
-      .catch((e) =>
-        this.logger.error(
-          'Failed to refresh rates on startup',
-          e instanceof Error ? e.stack : String(e),
-        ),
-      );
+        return;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (attempt < STARTUP_REFRESH_ATTEMPTS) {
+          this.logger.debug(
+            `Rate refresh on startup failed (attempt ${attempt}/${STARTUP_REFRESH_ATTEMPTS}), retrying in ${STARTUP_REFRESH_DELAY_MS / 1000}s: ${msg}`,
+          );
+          await delay(STARTUP_REFRESH_DELAY_MS);
+        } else {
+          this.logger.warn(
+            `Rate refresh on startup failed after ${STARTUP_REFRESH_ATTEMPTS} attempts: ${msg}`,
+          );
+        }
+      }
+    }
   }
 
   async getEffectiveSettings(): Promise<{ baseCurrency: string; rateSource: 'cbr' | 'manual' }> {
