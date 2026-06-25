@@ -187,6 +187,10 @@ export function ProvidersPage() {
       notifyError(t('providers.err.aezaToken'));
       return;
     }
+    if (!editing && v.kind === 'cloudflare' && !(v.accountId && v.token)) {
+      notifyError(t('providers.err.cloudflareCreds'));
+      return;
+    }
     const creds = {
       token: v.token || undefined,
       baseUrl: v.baseUrl || undefined,
@@ -415,6 +419,20 @@ export function ProvidersPage() {
                   description={t('providers.field.projectDesc')}
                   placeholder="my-project"
                   {...form.getInputProps('projectName')}
+                />
+              </>
+            ) : form.values.kind === 'cloudflare' ? (
+              <>
+                <TextInput
+                  label={t('providers.field.accountId')}
+                  description={t('providers.field.cloudflareAccountIdDesc')}
+                  {...form.getInputProps('accountId')}
+                />
+                <PasswordInput
+                  label={t('providers.field.apiToken')}
+                  description={t('providers.field.apiTokenDescCloudflare')}
+                  placeholder={editing ? t('providers.keepEmpty') : ''}
+                  {...form.getInputProps('token')}
                 />
               </>
             ) : form.values.kind === 'hostbill' || form.values.kind === 'billmgr' ? (

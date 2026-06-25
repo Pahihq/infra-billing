@@ -45,6 +45,9 @@ export const providers = {
       apiTokenDescLinode:
         'Linode → Account → API Tokens → create a Personal Access Token (read access to Account and Linodes)',
       apiTokenDescAeza: 'Aeza panel → API Keys → create an API key',
+      apiTokenDescCloudflare:
+        'Cloudflare → My Profile → API Tokens → create a token with Account · Domain Configuration: Read and Account · Billing: Read',
+      cloudflareAccountIdDesc: 'Cloudflare account ID (dashboard URL or GET /accounts)',
       refreshToken: 'Refresh token (OAuth2)',
       refreshTokenDescNetcup:
         'Use “Authorize via netcup” above, or paste an offline refresh token manually',
@@ -71,6 +74,7 @@ export const providers = {
       porkbunCreds: 'Enter the Porkbun API key and secret key',
       linodeToken: 'Enter the Linode API token',
       aezaToken: 'Enter the Aeza API key',
+      cloudflareCreds: 'Enter the Cloudflare account ID and API token',
     },
     netcup: {
       authorize: 'Authorize via netcup',
@@ -138,6 +142,9 @@ export const providers = {
       apiTokenDescLinode:
         'Linode → Account → API Tokens → создать Personal Access Token (доступ на чтение к Account и Linodes)',
       apiTokenDescAeza: 'Панель Aeza → API Keys → создать API-ключ',
+      apiTokenDescCloudflare:
+        'Cloudflare → My Profile → API Tokens → создать токен с правами Account · Domain Configuration: Read и Account · Billing: Read',
+      cloudflareAccountIdDesc: 'Account ID аккаунта Cloudflare (из URL дашборда или GET /accounts)',
       refreshToken: 'Refresh-токен (OAuth2)',
       refreshTokenDescNetcup:
         'Нажмите «Авторизоваться через netcup» выше или вставьте offline refresh-токен вручную',
@@ -164,6 +171,7 @@ export const providers = {
       porkbunCreds: 'Укажите API-ключ и секретный ключ Porkbun',
       linodeToken: 'Укажите API-токен Linode',
       aezaToken: 'Укажите API-ключ Aeza',
+      cloudflareCreds: 'Укажите account ID и API-токен Cloudflare',
     },
     netcup: {
       authorize: 'Авторизоваться через netcup',

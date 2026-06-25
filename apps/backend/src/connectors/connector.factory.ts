@@ -6,6 +6,8 @@ import { BegetConnector } from './beget/beget.connector';
 import type { BegetCredentials } from './beget/beget.types';
 import { BillmgrConnector } from './billmgr/billmgr.connector';
 import type { BillmgrCredentials } from './billmgr/billmgr.types';
+import { CloudflareConnector } from './cloudflare/cloudflare.connector';
+import type { CloudflareCredentials } from './cloudflare/cloudflare.types';
 import { Connector } from './connector.interface';
 import { HetznerConnector } from './hetzner/hetzner.connector';
 import { HostbillConnector } from './hostbill/hostbill.connector';
@@ -65,6 +67,9 @@ export class ConnectorFactory {
       case 'aeza':
         // Aeza secret is the raw API key (single string, sent as the X-API-KEY header).
         return new AezaConnector(token);
+      case 'cloudflare':
+        // Cloudflare secret is JSON: { accountId, apiToken } (account-scoped registrar + billing).
+        return new CloudflareConnector(JSON.parse(token) as CloudflareCredentials);
       default:
         throw new Error(`Connector for kind="${kind}" is not supported`);
     }

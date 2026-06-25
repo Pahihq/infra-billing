@@ -118,6 +118,7 @@ export const common = {
         vultr: 'Vultr',
         linode: 'Linode',
         aeza: 'Aeza',
+        cloudflare: 'Cloudflare',
         manual: 'Manual',
       },
       rateSource: {
@@ -243,6 +244,7 @@ export const common = {
         vultr: 'Vultr',
         linode: 'Linode',
         aeza: 'Aeza',
+        cloudflare: 'Cloudflare',
         manual: 'Ручной',
       },
       rateSource: {

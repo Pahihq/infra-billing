@@ -31,6 +31,7 @@ export const PROVIDER_KINDS: ProviderKind[] = [
   'vultr',
   'linode',
   'aeza',
+  'cloudflare',
   'manual',
 ];
 

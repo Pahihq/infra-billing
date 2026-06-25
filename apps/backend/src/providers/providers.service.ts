@@ -55,6 +55,11 @@ export class ProvidersService {
       const c = this.decodeCredentials(enc);
       return { ...dto, username: c.username ?? null };
     }
+    if (kind === 'cloudflare') {
+      // accountId is a non-secret hint; never expose the apiToken.
+      const c = this.decodeCredentials(enc);
+      return { ...dto, accountId: c.accountId ?? null };
+    }
     if (kind !== 'hostbill' && kind !== 'billmgr') return dto;
     const c = this.decodeCredentials(enc);
     // Never expose password/totpSecret.
@@ -177,6 +182,17 @@ export class ProvidersService {
       const apiPassword = dto.apiPassword ?? base.apiPassword;
       if (apiPassword) creds.apiPassword = apiPassword;
       return this.crypto.encrypt(JSON.stringify(creds));
+    }
+    if (kind === 'cloudflare') {
+      // JSON { accountId, apiToken } — `token` carries the API token. Merge so a partial edit works.
+      if (!dto.accountId && !dto.token) return null;
+      const base = this.decodeCredentials(existingEnc);
+      const accountId = dto.accountId ?? base.accountId;
+      const apiToken = dto.token ?? base.apiToken;
+      if (!accountId || !apiToken) {
+        throw new BadRequestException('Provide the Cloudflare account ID and API token together');
+      }
+      return this.crypto.encrypt(JSON.stringify({ accountId, apiToken }));
     }
     if (kind === 'porkbun') {
       // JSON { apiKey, secretApiKey } — `token` carries the API key. Merge so a partial edit works.
