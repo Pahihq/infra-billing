@@ -2,6 +2,7 @@ import { IconBrandGithub, IconStarFilled } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { Odometer } from '@/components/remocn/odometer';
 import { Button } from '@/components/ui/button';
 
 const REPO = 'mishkatik/infra-billing';
@@ -33,7 +34,8 @@ export function GithubStars() {
         <IconBrandGithub className="size-4" />
         <span className="flex items-center gap-1.5">
           <IconStarFilled className="size-[13px] text-amber-400" />
-          <span className="text-sm leading-none font-semibold">{stars}</span>
+          {/* Counter in the remocn github-stars style: an odometer with rolling digits. */}
+          <Odometer value={stars} className="text-sm leading-none font-semibold" />
         </span>
       </a>
     </Button>

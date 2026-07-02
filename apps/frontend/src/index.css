@@ -156,3 +156,43 @@
     @apply text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground;
   }
 }
+
+/* Wordmark with marker (BrandWordmark) — CSS take on the remocn marker-highlight:
+   the marker sweeps in from the left with a slight overshoot, and the text under it
+   recolors to a dark plum. */
+@keyframes brand-marker-sweep {
+  0% {
+    transform: scaleX(0);
+  }
+  75% {
+    transform: scaleX(1.04);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+@keyframes brand-marker-ink {
+  0%,
+  45% {
+    color: inherit;
+  }
+  70%,
+  100% {
+    color: #430b34;
+  }
+}
+.brand-marker {
+  animation: brand-marker-sweep 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+.brand-marker-text {
+  animation: brand-marker-ink 0.9s linear 0.35s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-marker,
+  .brand-marker-text {
+    animation: none;
+  }
+  .brand-marker-text {
+    color: #430b34;
+  }
+}

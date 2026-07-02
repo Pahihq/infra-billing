@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { NavLink as RouterNavLink, Outlet, useLocation } from 'react-router-dom';
 import { useLogout, useMe } from '@/api/auth';
+import { BrandWordmark } from '@/components/BrandWordmark';
 import { BuildInfo } from '@/components/BuildInfo';
 import { DocsLink } from '@/components/DocsLink';
 import { GithubStars } from '@/components/GithubStars';
@@ -149,7 +150,7 @@ export function AppLayout() {
       <Sidebar collapsible="offcanvas">
         <SidebarHeader>
           <div className="flex items-center px-2 pt-2 pb-0.5">
-            <span className="text-[17px] font-extrabold tracking-tight">Infra Billing</span>
+            <BrandWordmark className="text-[17px]" />
           </div>
         </SidebarHeader>
         <SidebarContent>

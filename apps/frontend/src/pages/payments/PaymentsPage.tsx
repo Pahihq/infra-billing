@@ -1,6 +1,6 @@
 import { IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { type Dispatch, type SetStateAction, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { apiErrorMessage } from '@/api/client';
@@ -29,18 +29,23 @@ export function PaymentsPage() {
   const { t } = useTranslation();
   const enums = useEnums();
   const { data: providers } = useProviders();
-  const [filter, setFilter] = useState<PaymentFilter>({});
-  const [page, setPage] = useState(1);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset page only when the filter changes
-  useEffect(() => setPage(1), [filter]);
-  const { data, isLoading } = usePayments(filter, { page, pageSize: PAGE_SIZE });
+  const [filter, setFilterState] = useState<PaymentFilter>({});
+  const [rawPage, setRawPage] = useState(1);
+  // A new filter always lands on page 1 — reset in the same event that changes the filter, so we
+  // never fetch the old page against the new filter (the old effect chain did exactly that).
+  const setFilter: Dispatch<SetStateAction<PaymentFilter>> = (update) => {
+    setFilterState(update);
+    setRawPage(1);
+  };
+  const { data, isLoading } = usePayments(filter, { page: rawPage, pageSize: PAGE_SIZE });
   const payments = data?.items ?? [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  // Clamp when the loaded total shrinks below the current page (e.g. after deletions).
-  useEffect(() => {
-    if (data && page > pageCount) setPage(pageCount);
-  }, [data, page, pageCount]);
+  // Pagination is server-side, so a shrunken total (e.g. after deletions) must move the query to
+  // the last real page — adjust state during render (React restarts before commit) instead of an
+  // effect, and clamp the displayed page for the adjusting pass.
+  if (data && rawPage > pageCount) setRawPage(pageCount);
+  const page = Math.min(rawPage, pageCount);
   const create = useCreatePayment();
   const del = useDeletePayment();
   const [opened, { open, close }] = useDisclosure(false);
@@ -135,7 +140,7 @@ export function PaymentsPage() {
               size="icon"
               aria-label="prev"
               disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setRawPage(Math.max(1, page - 1))}
             >
               <IconChevronLeft className="size-4" />
             </Button>
@@ -147,7 +152,7 @@ export function PaymentsPage() {
               size="icon"
               aria-label="next"
               disabled={page >= pageCount}
-              onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+              onClick={() => setRawPage(Math.min(pageCount, page + 1))}
             >
               <IconChevronRight className="size-4" />
             </Button>

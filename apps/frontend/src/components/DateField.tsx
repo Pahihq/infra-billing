@@ -2,7 +2,7 @@ import { IconCalendar, IconX } from '@tabler/icons-react';
 import { enUS, ru } from 'date-fns/locale';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -50,13 +50,17 @@ export function DateField({
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(() => toDisplay(value));
-  const [focused, setFocused] = useState(false);
+  // Never rendered — a ref avoids a re-render on every focus/blur.
+  const focusedRef = useRef(false);
 
-  // External value changes (form reset, calendar pick) re-sync the text,
-  // but must not clobber it while the user is typing.
-  useEffect(() => {
-    if (!focused) setText(toDisplay(value));
-  }, [value, focused]);
+  // External value changes (form reset, calendar pick) re-sync the text, but must not clobber
+  // it while the user is typing. Render-time prev-comparison instead of an effect: the reset
+  // happens in the same render pass, without an intermediate frame showing stale text.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    if (!focusedRef.current) setText(toDisplay(value));
+  }
 
   const parsedValue = value ? dayjs(value, ISO_FORMAT, true) : null;
   const selected = parsedValue?.isValid() ? parsedValue.toDate() : undefined;
@@ -91,10 +95,12 @@ export function DateField({
           autoComplete="off"
           className={cn('pr-9', showClear && 'pr-[3.75rem]')}
           onChange={(e) => setText(e.target.value)}
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            focusedRef.current = true;
+          }}
           onBlur={() => {
             commit();
-            setFocused(false);
+            focusedRef.current = false;
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {

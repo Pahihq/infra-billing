@@ -11,18 +11,24 @@ export function ProviderIcon({
   src: string | null;
   size?: number;
 }) {
-  const [favicon, setFavicon] = useState<string | null>(null);
+  // Keyed by the src it was loaded for: when src changes, the derived favicon below falls back
+  // to the initial immediately during render — no reset effect, no flash of the previous icon.
+  const [loaded, setLoaded] = useState<{ src: string; ok: boolean } | null>(null);
 
   useEffect(() => {
-    setFavicon(null);
     if (!src) return;
     const img = new Image();
     img.onload = () => {
-      if (img.naturalWidth > 16) setFavicon(src);
+      setLoaded({ src, ok: img.naturalWidth > 16 });
     };
     img.src = src;
+    return () => {
+      // A stale onload must not clobber the state that belongs to the current src.
+      img.onload = null;
+    };
   }, [src]);
 
+  const favicon = loaded && loaded.src === src && loaded.ok ? src : null;
   const initial = (name.trim().charAt(0) || '?').toUpperCase();
 
   if (favicon) {

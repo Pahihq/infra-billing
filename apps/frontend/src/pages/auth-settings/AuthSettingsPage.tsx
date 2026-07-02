@@ -41,17 +41,19 @@ export function AuthSettingsPage() {
   });
 
   // useLayoutEffect (not useEffect) so the seeded values are committed before the browser paints.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-seed the form only when config loads
+  // react-hook-form's reset is referentially stable, so the effect still re-seeds only when the
+  // config loads or refetches.
+  const { reset } = methodsForm;
   useLayoutEffect(() => {
     if (!config) return;
-    methodsForm.reset({
+    reset({
       passwordEnabled: config.passwordEnabled,
       passkeyEnabled: config.passkeyEnabled,
       rpId: config.rpId,
       rpName: config.rpName,
       rpOrigin: config.rpOrigin,
     });
-  }, [config]);
+  }, [config, reset]);
 
   const useCurrentHost = () => {
     const v = methodsForm.getValues();

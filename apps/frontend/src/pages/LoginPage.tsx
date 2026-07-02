@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type LoginInput, loginSchema } from '@infra/shared';
 import { IconArrowsShuffle, IconFingerprint, IconLoader2 } from '@tabler/icons-react';
+import { lazy, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLogin, usePasskeyLogin, useSetup, useSetupStatus } from '@/api/auth';
@@ -15,6 +16,14 @@ import { Separator } from '@/components/ui/separator';
 import { notifyError, notifySuccess } from '@/utils/notify';
 import { generatePassword } from '@/utils/password';
 
+// The Remotion scene is heavy — load it lazily; the backdrop and title share one chunk.
+const LoginBackdrop = lazy(() =>
+  import('@/components/login/LoginScene').then((m) => ({ default: m.LoginBackdrop })),
+);
+const LoginTitle = lazy(() =>
+  import('@/components/login/LoginScene').then((m) => ({ default: m.LoginTitle })),
+);
+
 export function LoginPage() {
   const { t } = useTranslation();
   const status = useSetupStatus();
@@ -22,10 +31,25 @@ export function LoginPage() {
   return (
     // Force the dark class: this artwork page is always dark regardless of the theme.
     <div className="dark relative min-h-svh bg-[#0a0a0c] text-foreground">
+      <Suspense fallback={<div className="absolute inset-0 bg-[#0a0a0c]" />}>
+        <LoginBackdrop />
+      </Suspense>
+
       <div className="relative z-10 flex min-h-svh items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm space-y-6">
           <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight text-white">{t('app.brand')}</h1>
+            {/* Title with the remocn marker; a static h1 of the same height until the chunk loads. */}
+            <div className="h-[72px] w-full">
+              <Suspense
+                fallback={
+                  <h1 className="flex h-full items-center justify-center text-4xl font-extrabold tracking-tight text-white">
+                    {t('app.brand')}
+                  </h1>
+                }
+              >
+                <LoginTitle />
+              </Suspense>
+            </div>
             <p className="text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
           </div>
 
