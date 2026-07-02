@@ -1,10 +1,8 @@
-import { useState } from 'react';
-import { Button, Group, Stack, Text, Title } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { useDisclosure } from '@mantine/hooks';
-import { IconPlus, IconRefresh } from '@tabler/icons-react';
-import { useTranslation } from 'react-i18next';
 import type { Provider, ProviderKind } from '@infra/shared';
+import { IconLoader2, IconPlus, IconRefresh } from '@tabler/icons-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { apiErrorMessage } from '@/api/client';
 import {
   useCreateProvider,
@@ -15,7 +13,10 @@ import {
   useUpdateProvider,
 } from '@/api/providers';
 import { useSettings } from '@/api/settings';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 import { useEnums } from '@/constants';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { formatDate } from '@/utils/format';
 import { notifyError, notifySuccess } from '@/utils/notify';
 import { BalanceHistoryModal } from './BalanceHistoryModal';
@@ -42,19 +43,16 @@ export function ProvidersPage() {
   const [editing, setEditing] = useState<Provider | null>(null);
   const [historyFor, setHistoryFor] = useState<Provider | null>(null);
 
-  const form = useForm<FormValues>({
-    initialValues: EMPTY_FORM,
-    validate: { name: (v) => (v.trim() ? null : t('validation.enterName')) },
-  });
+  const form = useForm<FormValues>({ defaultValues: EMPTY_FORM, mode: 'onSubmit' });
 
   const openCreate = () => {
     setEditing(null);
-    form.setValues({ ...EMPTY_FORM });
+    form.reset({ ...EMPTY_FORM });
     open();
   };
   const openEdit = (p: Provider) => {
     setEditing(p);
-    form.setValues({
+    form.reset({
       ...EMPTY_FORM,
       name: p.name,
       kind: p.kind,
@@ -81,7 +79,7 @@ export function ProvidersPage() {
     }
   };
 
-  const submit = form.onSubmit(async (v) => {
+  const submit = form.handleSubmit(async (v) => {
     if (!editing) {
       const err = validateProviderCredentials(v, t);
       if (err) {
@@ -141,31 +139,34 @@ export function ProvidersPage() {
   };
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>{t('providers.title')}</Title>
-          <Text c="dimmed">{t('providers.subtitle')}</Text>
-          {settings?.nextSyncAt && (
-            <Text c="dimmed" size="sm" mt={4}>
-              {t('providers.nextSync', { when: formatDate(settings.nextSyncAt) })}
-            </Text>
-          )}
-        </div>
-        <Group>
-          <Button
-            variant="default"
-            leftSection={<IconRefresh size={16} />}
-            loading={syncAll.isPending}
-            onClick={doSyncAll}
-          >
-            {t('providers.syncAll')}
-          </Button>
-          <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
-            {t('common.add')}
-          </Button>
-        </Group>
-      </Group>
+    <div className="space-y-6">
+      <div>
+        <PageHeader
+          title={t('providers.title')}
+          subtitle={t('providers.subtitle')}
+          actions={
+            <>
+              <Button variant="outline" disabled={syncAll.isPending} onClick={doSyncAll}>
+                {syncAll.isPending ? (
+                  <IconLoader2 className="size-4 animate-spin" />
+                ) : (
+                  <IconRefresh className="size-4" />
+                )}
+                {t('providers.syncAll')}
+              </Button>
+              <Button onClick={openCreate}>
+                <IconPlus className="size-4" />
+                {t('common.add')}
+              </Button>
+            </>
+          }
+        />
+        {settings?.nextSyncAt && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('providers.nextSync', { when: formatDate(settings.nextSyncAt) })}
+          </p>
+        )}
+      </div>
 
       <ProvidersTable
         providers={providers}
@@ -189,6 +190,6 @@ export function ProvidersPage() {
       />
 
       <BalanceHistoryModal provider={historyFor} onClose={() => setHistoryFor(null)} />
-    </Stack>
+    </div>
   );
 }

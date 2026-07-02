@@ -1,7 +1,6 @@
-import { SimpleGrid } from '@mantine/core';
+import type { AnalyticsSummary } from '@infra/shared';
 import { IconCalendarDollar, IconCash, IconChartBar, IconWallet } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { AnalyticsSummary } from '@infra/shared';
 import { StatCard } from '@/components/StatCard';
 import { formatMoney } from '@/utils/format';
 
@@ -13,7 +12,7 @@ interface KpiCardsProps {
 export function KpiCards({ summary, base }: KpiCardsProps) {
   const { t } = useTranslation();
   return (
-    <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
+    <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4">
       <StatCard
         label={t('dashboard.kpi.monthly')}
         value={formatMoney(summary?.monthlyTotal ?? '0', base)}
@@ -37,6 +36,6 @@ export function KpiCards({ summary, base }: KpiCardsProps) {
         icon={IconCalendarDollar}
         color="grape"
       />
-    </SimpleGrid>
+    </div>
   );
 }

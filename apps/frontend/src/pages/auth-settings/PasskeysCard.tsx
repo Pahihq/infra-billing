@@ -1,17 +1,10 @@
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Card,
-  Group,
-  Stack,
-  Text,
-  ThemeIcon,
-  Tooltip,
-} from '@mantine/core';
-import { IconFingerprint, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconFingerprint, IconLoader2, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { Passkey } from '@infra/shared';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDate } from '@/utils/format';
 
 interface PasskeysCardProps {
@@ -33,64 +26,87 @@ export function PasskeysCard({
 }: PasskeysCardProps) {
   const { t } = useTranslation();
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Group justify="space-between" mb="md">
-        <Text fw={600}>{t('auth.passkeys.title')}</Text>
-        <Tooltip label={t('auth.passkeys.unsupported')} disabled={canPasskey}>
-          <Button
-            variant="light"
-            leftSection={<IconPlus size={16} />}
-            disabled={!canPasskey}
-            loading={adding}
-            onClick={onAdd}
-          >
-            {t('auth.passkeys.add')}
-          </Button>
-        </Tooltip>
-      </Group>
+    <Card className="gap-4 py-6">
+      <CardHeader>
+        <CardTitle>{t('auth.passkeys.title')}</CardTitle>
+        <CardAction>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* span keeps the tooltip working over the disabled button */}
+              <span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={!canPasskey || adding}
+                  onClick={onAdd}
+                >
+                  {adding ? (
+                    <IconLoader2 className="size-4 animate-spin" />
+                  ) : (
+                    <IconPlus className="size-4" />
+                  )}
+                  {t('auth.passkeys.add')}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {!canPasskey && <TooltipContent>{t('auth.passkeys.unsupported')}</TooltipContent>}
+          </Tooltip>
+        </CardAction>
+      </CardHeader>
 
-      {passkeys && passkeys.length > 0 ? (
-        <Stack gap="xs">
-          {passkeys.map((pk) => (
-            <Group key={pk.uuid} justify="space-between" wrap="nowrap">
-              <Group gap="sm" wrap="nowrap">
-                <ThemeIcon variant="light" color="brand" radius="md">
-                  <IconFingerprint size={18} />
-                </ThemeIcon>
-                <div>
-                  <Group gap="xs">
-                    <Text fw={500}>{pk.name ?? t('auth.passkeys.unnamed')}</Text>
-                    {pk.backedUp && (
-                      <Badge size="sm" variant="light" color="teal">
-                        {t('auth.passkeys.backedUp')}
-                      </Badge>
-                    )}
-                  </Group>
-                  <Text size="xs" c="dimmed">
-                    {t('auth.passkeys.created', { date: formatDate(pk.createdAt) })}
-                    {' · '}
-                    {pk.lastUsedAt
-                      ? t('auth.passkeys.lastUsed', { date: formatDate(pk.lastUsedAt) })
-                      : t('auth.passkeys.neverUsed')}
-                  </Text>
+      <CardContent>
+        {passkeys && passkeys.length > 0 ? (
+          <div className="space-y-2">
+            {passkeys.map((pk) => (
+              <div key={pk.uuid} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand">
+                    <IconFingerprint className="size-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{pk.name ?? t('auth.passkeys.unnamed')}</p>
+                      {pk.backedUp && (
+                        <Badge className="border-transparent bg-success/15 text-success">
+                          {t('auth.passkeys.backedUp')}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('auth.passkeys.created', { date: formatDate(pk.createdAt) })}
+                      {' · '}
+                      {pk.lastUsedAt
+                        ? t('auth.passkeys.lastUsed', { date: formatDate(pk.lastUsedAt) })
+                        : t('auth.passkeys.neverUsed')}
+                    </p>
+                  </div>
                 </div>
-              </Group>
-              <ActionIcon
-                variant="subtle"
-                color="red"
-                onClick={() => onRemove(pk)}
-                loading={removing}
-              >
-                <IconTrash size={18} />
-              </ActionIcon>
-            </Group>
-          ))}
-        </Stack>
-      ) : (
-        <Text c="dimmed" size="sm">
-          {t('auth.passkeys.empty')}
-        </Text>
-      )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      aria-label={t('common.delete')}
+                      disabled={removing}
+                      onClick={() => onRemove(pk)}
+                    >
+                      {removing ? (
+                        <IconLoader2 className="size-4 animate-spin" />
+                      ) : (
+                        <IconTrash className="size-4.5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('common.delete')}</TooltipContent>
+                </Tooltip>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{t('auth.passkeys.empty')}</p>
+        )}
+      </CardContent>
     </Card>
   );
 }

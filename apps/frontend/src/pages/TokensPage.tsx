@@ -1,26 +1,34 @@
 import { useState } from 'react';
-import {
-  ActionIcon,
-  Alert,
-  Button,
-  Code,
-  CopyButton,
-  Group,
-  Modal,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-  Title,
-  Tooltip,
-} from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { useDisclosure } from '@mantine/hooks';
+import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { IconAlertTriangle, IconCheck, IconCopy, IconPlus, IconTrash } from '@tabler/icons-react';
+import {
+  IconAlertTriangle,
+  IconCheck,
+  IconCopy,
+  IconLoader2,
+  IconPlus,
+  IconTrash,
+} from '@tabler/icons-react';
 import type { ApiToken, CreatedApiToken } from '@infra/shared';
 import { useCreateToken, useDeleteToken, useTokens } from '@/api/tokens';
 import { apiErrorMessage } from '@/api/client';
+import { PageHeader } from '@/components/PageHeader';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { notifyError, notifySuccess } from '@/utils/notify';
 import { formatDateShort } from '@/utils/format';
 
@@ -32,18 +40,19 @@ export function TokensPage() {
   const [opened, { open, close }] = useDisclosure(false);
   // The raw token, captured from the create response. Shown once, then cleared.
   const [created, setCreated] = useState<CreatedApiToken | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const form = useForm<{ tokenName: string }>({
-    initialValues: { tokenName: '' },
-    validate: { tokenName: (v) => (v.trim() ? null : t('validation.enterName')) },
+    defaultValues: { tokenName: '' },
+    mode: 'onSubmit',
   });
 
   const openCreate = () => {
-    form.setValues({ tokenName: '' });
+    form.reset({ tokenName: '' });
     open();
   };
 
-  const submit = form.onSubmit(async (v) => {
+  const submit = form.handleSubmit(async (v) => {
     try {
       const res = await create.mutateAsync({ tokenName: v.tokenName.trim() });
       close();
@@ -52,6 +61,17 @@ export function TokensPage() {
       notifyError(apiErrorMessage(e));
     }
   });
+
+  const closeReveal = () => {
+    setCreated(null);
+    setCopied(false);
+  };
+
+  const copyToken = async () => {
+    await navigator.clipboard.writeText(created?.token ?? '');
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  };
 
   const doDelete = async (tok: ApiToken) => {
     if (!window.confirm(t('tokens.confirmDelete', { name: tok.tokenName }))) return;
@@ -63,108 +83,138 @@ export function TokensPage() {
     }
   };
 
+  const nameError = form.formState.errors.tokenName;
+
   return (
-    <Stack gap="lg">
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>{t('tokens.title')}</Title>
-          <Text c="dimmed">{t('tokens.subtitle')}</Text>
-        </div>
-        <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
-          {t('common.add')}
-        </Button>
-      </Group>
+    <div className="space-y-6">
+      <PageHeader
+        title={t('tokens.title')}
+        subtitle={t('tokens.subtitle')}
+        actions={
+          <Button onClick={openCreate}>
+            <IconPlus className="size-4" />
+            {t('common.add')}
+          </Button>
+        }
+      />
 
-      <Table.ScrollContainer minWidth={640}>
-        <Table verticalSpacing="sm" highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>{t('tokens.colName')}</Table.Th>
-              <Table.Th>{t('tokens.colToken')}</Table.Th>
-              <Table.Th>{t('tokens.colCreated')}</Table.Th>
-              <Table.Th>{t('tokens.colLastUsed')}</Table.Th>
-              <Table.Th />
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {tokens?.map((tok) => (
-              <Table.Tr key={tok.uuid}>
-                <Table.Td>
-                  <Text fw={600}>{tok.tokenName}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Code>{`${tok.tokenPrefix}…`}</Code>
-                </Table.Td>
-                <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                  {formatDateShort(tok.createdAt)}
-                </Table.Td>
-                <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                  {tok.lastUsedAt ? formatDateShort(tok.lastUsedAt) : t('tokens.lastUsedNever')}
-                </Table.Td>
-                <Table.Td>
-                  <Group justify="flex-end">
-                    <ActionIcon variant="subtle" color="red" onClick={() => doDelete(tok)}>
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-            {!isLoading && tokens?.length === 0 && (
-              <Table.Tr>
-                <Table.Td colSpan={5}>
-                  <Text c="dimmed" ta="center" py="md">
+      <Card className="overflow-hidden py-0">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[640px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-muted-foreground">{t('tokens.colName')}</TableHead>
+                <TableHead className="text-muted-foreground">{t('tokens.colToken')}</TableHead>
+                <TableHead className="text-muted-foreground">{t('tokens.colCreated')}</TableHead>
+                <TableHead className="text-muted-foreground">{t('tokens.colLastUsed')}</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tokens?.map((tok) => (
+                <TableRow key={tok.uuid}>
+                  <TableCell className="font-semibold">{tok.tokenName}</TableCell>
+                  <TableCell>
+                    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+                      {`${tok.tokenPrefix}…`}
+                    </code>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateShort(tok.createdAt)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {tok.lastUsedAt ? formatDateShort(tok.lastUsedAt) : t('tokens.lastUsedNever')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        aria-label={t('common.delete')}
+                        onClick={() => doDelete(tok)}
+                      >
+                        <IconTrash className="size-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!isLoading && tokens?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
                     {t('tokens.empty')}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
-      </Table.ScrollContainer>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
 
-      <Modal opened={opened} onClose={close} title={t('tokens.modalCreate')}>
-        <form onSubmit={submit}>
-          <Stack>
-            <TextInput
-              label={t('tokens.fieldName')}
-              placeholder={t('tokens.namePlaceholder')}
-              required
-              data-autofocus
-              {...form.getInputProps('tokenName')}
-            />
-            <Button type="submit" loading={create.isPending}>
+      <Dialog open={opened} onOpenChange={(o) => !o && close()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('tokens.modalCreate')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submit} noValidate className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="token-name">
+                {t('tokens.fieldName')} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="token-name"
+                placeholder={t('tokens.namePlaceholder')}
+                autoFocus
+                aria-invalid={!!nameError}
+                {...form.register('tokenName', {
+                  validate: (v) => (v.trim() ? true : t('validation.enterName')),
+                })}
+              />
+              {nameError && <p className="text-xs text-destructive">{nameError.message}</p>}
+            </div>
+            <Button type="submit" className="w-full" disabled={create.isPending}>
+              {create.isPending && <IconLoader2 className="size-4 animate-spin" />}
               {t('tokens.create')}
             </Button>
-          </Stack>
-        </form>
-      </Modal>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <Modal
-        opened={!!created}
-        onClose={() => setCreated(null)}
-        title={t('tokens.reveal.title')}
-        closeOnClickOutside={false}
-      >
-        <Stack>
-          <Alert color="yellow" variant="light" icon={<IconAlertTriangle size={18} />}>
-            {t('tokens.reveal.warning')}
-          </Alert>
-          <CopyButton value={created?.token ?? ''}>
-            {({ copied, copy }) => (
-              <Group gap={6} wrap="nowrap">
-                <Code style={{ flex: 1, wordBreak: 'break-all' }}>{created?.token}</Code>
-                <Tooltip label={copied ? t('tokens.copied') : t('tokens.copy')}>
-                  <ActionIcon variant="subtle" color="gray" onClick={copy}>
-                    {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-                  </ActionIcon>
-                </Tooltip>
-              </Group>
-            )}
-          </CopyButton>
-          <Button onClick={() => setCreated(null)}>{t('tokens.reveal.done')}</Button>
-        </Stack>
-      </Modal>
-    </Stack>
+      <Dialog open={!!created} onOpenChange={(o) => !o && closeReveal()}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>{t('tokens.reveal.title')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Alert variant="destructive">
+              <IconAlertTriangle className="size-4" />
+              <AlertDescription>{t('tokens.reveal.warning')}</AlertDescription>
+            </Alert>
+            <div className="flex items-center gap-1.5">
+              <code className="min-w-0 flex-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs break-all">
+                {created?.token}
+              </code>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={copied ? t('tokens.copied') : t('tokens.copy')}
+                    onClick={copyToken}
+                  >
+                    {copied ? <IconCheck className="size-4" /> : <IconCopy className="size-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{copied ? t('tokens.copied') : t('tokens.copy')}</TooltipContent>
+              </Tooltip>
+            </div>
+            <Button className="w-full" onClick={closeReveal}>
+              {t('tokens.reveal.done')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

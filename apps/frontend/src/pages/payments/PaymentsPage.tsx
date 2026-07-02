@@ -1,9 +1,7 @@
-import { Button, Group, Pagination, Stack, Text, Title } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { useDisclosure } from '@mantine/hooks';
-import { IconPlus } from '@tabler/icons-react';
+import { IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { apiErrorMessage } from '@/api/client';
 import {
@@ -14,7 +12,10 @@ import {
 } from '@/api/payments';
 import { useProviders } from '@/api/providers';
 import { useServices } from '@/api/services';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 import { useEnums } from '@/constants';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { trimMoney } from '@/utils/format';
 import { notifyError, notifySuccess } from '@/utils/notify';
 import { PaymentFormModal } from './PaymentFormModal';
@@ -35,6 +36,11 @@ export function PaymentsPage() {
   const { data, isLoading } = usePayments(filter, { page, pageSize: PAGE_SIZE });
   const payments = data?.items ?? [];
   const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // Clamp when the loaded total shrinks below the current page (e.g. after deletions).
+  useEffect(() => {
+    if (data && page > pageCount) setPage(pageCount);
+  }, [data, page, pageCount]);
   const create = useCreatePayment();
   const del = useDeletePayment();
   const [opened, { open, close }] = useDisclosure(false);
@@ -43,7 +49,7 @@ export function PaymentsPage() {
   const providerOf = (uuid: string) => providers?.find((p) => p.uuid === uuid);
 
   const form = useForm<PForm>({
-    initialValues: {
+    defaultValues: {
       providerUuid: '',
       serviceUuid: '',
       amount: '',
@@ -51,19 +57,15 @@ export function PaymentsPage() {
       paymentDate: dayjs().format('YYYY-MM-DD'),
       description: '',
     },
-    validate: {
-      providerUuid: (v) => (v ? null : t('validation.selectProvider')),
-      // Accept any number of decimals. Extra ones are trimmed to 2 (on blur + submit).
-      amount: (v) => (/^\d+(\.\d+)?$/.test(v) ? null : t('validation.amountFormat')),
-      paymentDate: (v) => (v ? null : t('validation.enterDate')),
-    },
+    mode: 'onSubmit',
   });
 
-  const formServices = useServices({ providerUuid: form.values.providerUuid || undefined });
+  const providerUuid = form.watch('providerUuid');
+  const formServices = useServices({ providerUuid: providerUuid || undefined });
   const serviceOptions = (formServices.data ?? []).map((s) => ({ value: s.uuid, label: s.name }));
 
   const openCreate = () => {
-    form.setValues({
+    form.reset({
       providerUuid: providerOptions[0]?.value ?? '',
       serviceUuid: '',
       amount: '',
@@ -74,7 +76,7 @@ export function PaymentsPage() {
     open();
   };
 
-  const submit = form.onSubmit(async (v) => {
+  const submit = form.handleSubmit(async (v) => {
     try {
       await create.mutateAsync({
         providerUuid: v.providerUuid,
@@ -102,20 +104,17 @@ export function PaymentsPage() {
   };
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>{t('payments.title')}</Title>
-          <Text c="dimmed">{t('payments.subtitle')}</Text>
-        </div>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          onClick={openCreate}
-          disabled={providerOptions.length === 0}
-        >
-          {t('common.add')}
-        </Button>
-      </Group>
+    <div className="space-y-6">
+      <PageHeader
+        title={t('payments.title')}
+        subtitle={t('payments.subtitle')}
+        actions={
+          <Button onClick={openCreate} disabled={providerOptions.length === 0}>
+            <IconPlus className="size-4" />
+            {t('common.add')}
+          </Button>
+        }
+      />
 
       <PaymentsFilters filter={filter} setFilter={setFilter} providerOptions={providerOptions} />
 
@@ -128,12 +127,32 @@ export function PaymentsPage() {
       />
 
       {total > PAGE_SIZE && (
-        <Group justify="space-between">
-          <Text size="sm" c="dimmed">
-            {t('payments.total', { count: total })}
-          </Text>
-          <Pagination total={Math.ceil(total / PAGE_SIZE)} value={page} onChange={setPage} />
-        </Group>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{t('payments.total', { count: total })}</p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="prev"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <IconChevronLeft className="size-4" />
+            </Button>
+            <span className="min-w-14 text-center text-sm tabular-nums">
+              {page} / {pageCount}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="next"
+              disabled={page >= pageCount}
+              onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+            >
+              <IconChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
       <PaymentFormModal
@@ -146,6 +165,6 @@ export function PaymentsPage() {
         onSubmit={submit}
         onClose={close}
       />
-    </Stack>
+    </div>
   );
 }

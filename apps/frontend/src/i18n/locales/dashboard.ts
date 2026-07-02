@@ -48,6 +48,9 @@ export const dashboard = {
       noData: 'No data',
       noUpcoming: 'No charges in the next 14 days',
       noProviders: 'No providers',
+      startTitle: 'No data yet',
+      startText: 'Add a provider — the panel will collect services, balances and analytics.',
+      startCta: 'Add provider',
     },
     upcoming: {
       title: 'Upcoming charges (14 days)',
@@ -107,6 +110,9 @@ export const dashboard = {
       noData: 'Нет данных',
       noUpcoming: 'Нет списаний в ближайшие 14 дней',
       noProviders: 'Нет провайдеров',
+      startTitle: 'Данных пока нет',
+      startText: 'Добавьте провайдера — панель соберёт сервисы, балансы и аналитику.',
+      startCta: 'Добавить провайдера',
     },
     upcoming: {
       title: 'Ближайшие списания (14 дней)',

@@ -1,13 +1,12 @@
-import { MantineProvider } from '@mantine/core';
-import { DatesProvider } from '@mantine/dates';
-import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import 'dayjs/locale/ru';
 import 'dayjs/locale/en';
-import { cssVariablesResolver, theme } from './theme';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { ThemeProvider } from '@/lib/theme';
 import { RequireAuth } from './auth/RequireAuth';
 import { AppLayout } from './layout/AppLayout';
 import { LoginPage } from './pages/LoginPage';
@@ -30,13 +29,9 @@ export default function App() {
   dayjs.locale(locale);
 
   return (
-    <MantineProvider
-      theme={theme}
-      defaultColorScheme="auto"
-      cssVariablesResolver={cssVariablesResolver}
-    >
-      <DatesProvider settings={{ locale, firstDayOfWeek: 1, weekendDays: [0, 6] }}>
-        <Notifications position="top-right" />
+    <ThemeProvider>
+      <TooltipProvider delayDuration={300}>
+        <Toaster position="top-right" richColors />
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <Routes>
@@ -57,7 +52,7 @@ export default function App() {
             </Routes>
           </BrowserRouter>
         </QueryClientProvider>
-      </DatesProvider>
-    </MantineProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   );
 }

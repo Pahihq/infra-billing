@@ -46,7 +46,9 @@ export function useEnums() {
   const { t } = useTranslation();
   const periodLabel = (p: string) => t(`enums.period.${p}`, p);
   const serviceTypeLabel = (s: string) => t(`enums.serviceType.${s}`, s);
-  const providerKindLabel = (k: string) => t(`enums.providerKind.${k}`, k);
+  // Connector kinds are lowercase codes (timeweb, billmgr, manual, …) shown as-is in every
+  // locale — netcup-brand style, no prose labels.
+  const providerKindLabel = (k: string) => k;
   const rateSourceLabel = (r: string) => t(`enums.rateSource.${r}`, r);
 
   return {

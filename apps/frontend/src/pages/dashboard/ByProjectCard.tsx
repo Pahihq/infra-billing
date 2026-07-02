@@ -1,8 +1,17 @@
-import { DonutChart } from '@mantine/charts';
-import { Card, Group, SimpleGrid, Table, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
 import type { AnalyticsSummary } from '@infra/shared';
+import { useTranslation } from 'react-i18next';
+import { Cell, Pie, PieChart } from 'recharts';
 import { ProviderIcon } from '@/components/ProviderIcon';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { formatMoney } from '@/utils/format';
 import { DONUT_COLORS } from './dashboardUtils';
 
@@ -24,60 +33,95 @@ export function ByProjectCard({ projectRows, base, isLoading, projectIconOf }: B
       value: Number(p.monthlyCost),
       color: DONUT_COLORS[i % DONUT_COLORS.length],
     }));
+  // A single default project with no services carries no information; skip the card entirely.
+  if (!rows.some((p) => (p.servicesCount ?? 0) > 0)) return null;
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Text fw={600} mb="md">
-        {t('dashboard.byProject.title', { base })}
-      </Text>
-      {rows.length > 0 ? (
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-          {projectDonut.length > 0 && (
-            <Group justify="center">
-              <DonutChart
-                data={projectDonut}
-                withTooltip
-                size={180}
-                thickness={28}
-                strokeWidth={0}
-                valueFormatter={chartMoney}
-              />
-            </Group>
-          )}
-          <Table verticalSpacing="xs">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t('dashboard.byProject.colProject')}</Table.Th>
-                <Table.Th ta="end">{t('dashboard.byProject.colServices')}</Table.Th>
-                <Table.Th ta="end">{t('dashboard.byProject.colMonthly', { base })}</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {rows.map((p) => (
-                <Table.Tr key={p.projectUuid}>
-                  <Table.Td>
-                    <Group gap={8} wrap="nowrap">
-                      <ProviderIcon name={p.name} src={projectIconOf(p.projectUuid)} size={18} />
-                      <Text size="sm" fw={500}>
-                        {p.name}
-                      </Text>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td ta="end">{p.servicesCount}</Table.Td>
-                  <Table.Td ta="end" style={{ whiteSpace: 'nowrap' }}>
-                    <Text size="sm" fw={600}>
+    <Card className="gap-3">
+      <CardHeader>
+        <CardTitle>{t('dashboard.byProject.title', { base })}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {rows.length > 0 ? (
+          <div className="grid items-center gap-6 md:grid-cols-2">
+            {projectDonut.length > 0 && (
+              <div className="flex justify-center">
+                <ChartContainer config={{}} className="aspect-square h-[180px]">
+                  <PieChart>
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          hideLabel
+                          formatter={(value, name, item) => (
+                            <>
+                              <div
+                                className="size-2.5 shrink-0 rounded-[2px]"
+                                style={{ backgroundColor: item.payload?.fill ?? item.color }}
+                              />
+                              <div className="flex flex-1 items-center justify-between gap-2 leading-none">
+                                <span className="text-muted-foreground">{name}</span>
+                                <span className="font-mono font-medium text-foreground tabular-nums">
+                                  {chartMoney(Number(value))}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        />
+                      }
+                    />
+                    <Pie
+                      data={projectDonut}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={62}
+                      outerRadius={88}
+                      strokeWidth={0}
+                    >
+                      {projectDonut.map((d) => (
+                        <Cell key={d.name} fill={d.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+              </div>
+            )}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-muted-foreground">
+                    {t('dashboard.byProject.colProject')}
+                  </TableHead>
+                  <TableHead className="text-right text-muted-foreground">
+                    {t('dashboard.byProject.colServices')}
+                  </TableHead>
+                  <TableHead className="text-right text-muted-foreground">
+                    {t('dashboard.byProject.colMonthly', { base })}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((p) => (
+                  <TableRow key={p.projectUuid}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <ProviderIcon name={p.name} src={projectIconOf(p.projectUuid)} size={18} />
+                        <span className="text-sm font-medium">{p.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{p.servicesCount}</TableCell>
+                    <TableCell className="text-right font-semibold">
                       {formatMoney(p.monthlyCost, base)}
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </SimpleGrid>
-      ) : (
-        <Text c="dimmed" size="sm">
-          {isLoading ? t('common.loading') : t('dashboard.empty.noServices')}
-        </Text>
-      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {isLoading ? t('common.loading') : t('dashboard.empty.noServices')}
+          </p>
+        )}
+      </CardContent>
     </Card>
   );
 }

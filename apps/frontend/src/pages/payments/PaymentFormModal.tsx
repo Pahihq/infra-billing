@@ -1,18 +1,38 @@
-import { Button, Group, Modal, Select, Stack, TextInput, Textarea } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
-import type { UseFormReturnType } from '@mantine/form';
-import { useTranslation } from 'react-i18next';
+import { IconLoader2 } from '@tabler/icons-react';
 import type { FormEventHandler } from 'react';
+import { Controller, type UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { DateField } from '@/components/DateField';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { trimMoney } from '@/utils/format';
 import type { PForm } from './paymentForm';
 
+// Radix Select forbids value="" — sentinel for the "no service" item.
+const NONE = 'none';
+
+interface Option {
+  value: string;
+  label: string;
+}
+
 interface PaymentFormModalProps {
   opened: boolean;
-  form: UseFormReturnType<PForm>;
+  form: UseFormReturn<PForm>;
   isPending: boolean;
-  providerOptions: { value: string; label: string }[];
-  serviceOptions: { value: string; label: string }[];
-  currencyOptions: { value: string; label: string }[];
+  providerOptions: Option[];
+  serviceOptions: Option[];
+  currencyOptions: Option[];
   onSubmit: FormEventHandler<HTMLFormElement>;
   onClose: () => void;
 }
@@ -28,57 +48,150 @@ export function PaymentFormModal({
   onClose,
 }: PaymentFormModalProps) {
   const { t } = useTranslation();
+  const {
+    control,
+    register,
+    setValue,
+    formState: { errors },
+  } = form;
   return (
-    <Modal opened={opened} onClose={onClose} title={t('payments.modalTitle')}>
-      <form onSubmit={onSubmit}>
-        <Stack>
-          <Select
-            label={t('payments.fieldProvider')}
-            data={providerOptions}
-            allowDeselect={false}
-            {...form.getInputProps('providerUuid')}
-          />
-          <Select
-            label={t('payments.fieldService', { optional: t('common.optional') })}
-            placeholder={t('common.none')}
-            clearable
-            data={serviceOptions}
-            {...form.getInputProps('serviceUuid')}
-          />
-          <Group grow>
-            <TextInput
-              label={t('payments.fieldAmount')}
-              required
-              {...form.getInputProps('amount')}
-              onBlur={(e) => form.setFieldValue('amount', trimMoney(e.currentTarget.value))}
+    <Dialog open={opened} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('payments.modalTitle')}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="payment-provider">{t('payments.fieldProvider')}</Label>
+            <Controller
+              control={control}
+              name="providerUuid"
+              rules={{ validate: (v) => (v ? true : t('validation.selectProvider')) }}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger
+                    id="payment-provider"
+                    className="w-full"
+                    aria-invalid={!!errors.providerUuid}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {providerOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-            <Select
-              label={t('payments.fieldCurrency')}
-              data={currencyOptions}
-              allowDeselect={false}
-              {...form.getInputProps('currency')}
+            {errors.providerUuid && (
+              <p className="text-xs text-destructive">{errors.providerUuid.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="payment-service">
+              {t('payments.fieldService', { optional: t('common.optional') })}
+            </Label>
+            <Controller
+              control={control}
+              name="serviceUuid"
+              render={({ field }) => (
+                <Select
+                  value={field.value || NONE}
+                  onValueChange={(v) => field.onChange(v === NONE ? '' : v)}
+                >
+                  <SelectTrigger id="payment-service" className="w-full">
+                    <SelectValue placeholder={t('common.none')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t('common.none')}</SelectItem>
+                    {serviceOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-          </Group>
-          <DateInput
-            label={t('payments.fieldDate')}
-            required
-            valueFormat="DD.MM.YYYY"
-            placeholder={t('payments.datePlaceholder')}
-            value={form.values.paymentDate || null}
-            onChange={(v) => form.setFieldValue('paymentDate', v ?? '')}
-            error={form.errors.paymentDate}
-          />
-          <Textarea
-            label={t('payments.fieldDescription')}
-            autosize
-            minRows={2}
-            {...form.getInputProps('description')}
-          />
-          <Button type="submit" loading={isPending}>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="payment-amount">
+                {t('payments.fieldAmount')} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="payment-amount"
+                aria-invalid={!!errors.amount}
+                {...register('amount', {
+                  // Accept any number of decimal places; extras are trimmed to 2 (on blur + submit).
+                  validate: (v) => (/^\d+(\.\d+)?$/.test(v) ? true : t('validation.amountFormat')),
+                  onBlur: (e) => setValue('amount', trimMoney(e.target.value)),
+                })}
+              />
+              {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="payment-currency">{t('payments.fieldCurrency')}</Label>
+              <Controller
+                control={control}
+                name="currency"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="payment-currency" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencyOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="payment-date">
+              {t('payments.fieldDate')} <span className="text-destructive">*</span>
+            </Label>
+            <Controller
+              control={control}
+              name="paymentDate"
+              rules={{ validate: (v) => (v ? true : t('validation.enterDate')) }}
+              render={({ field }) => (
+                <DateField
+                  id="payment-date"
+                  placeholder={t('payments.datePlaceholder')}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable={false}
+                />
+              )}
+            />
+            {errors.paymentDate && (
+              <p className="text-xs text-destructive">{errors.paymentDate.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="payment-description">{t('payments.fieldDescription')}</Label>
+            <Textarea id="payment-description" rows={2} {...register('description')} />
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending && <IconLoader2 className="size-4 animate-spin" />}
             {t('common.save')}
           </Button>
-        </Stack>
-      </form>
-    </Modal>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,10 +1,20 @@
-import { Group, Select } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
 import dayjs from 'dayjs';
-import { useTranslation } from 'react-i18next';
 import type { Dispatch, SetStateAction } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { PaymentFilter } from '@/api/payments';
+import { DateField } from '@/components/DateField';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toIso } from './paymentForm';
+
+// Radix Select forbids value="" — sentinel for the "all providers" item.
+const ALL = 'all';
 
 interface PaymentsFiltersProps {
   filter: PaymentFilter;
@@ -15,34 +25,46 @@ interface PaymentsFiltersProps {
 export function PaymentsFilters({ filter, setFilter, providerOptions }: PaymentsFiltersProps) {
   const { t } = useTranslation();
   return (
-    <Group align="flex-end">
-      <Select
-        label={t('payments.filterProvider')}
-        placeholder={t('payments.filterAllProviders')}
-        clearable
-        data={providerOptions}
-        value={filter.providerUuid ?? null}
-        onChange={(v) => setFilter((f) => ({ ...f, providerUuid: v ?? undefined }))}
-        w={220}
-      />
-      <DateInput
-        label={t('payments.filterFrom')}
-        placeholder={t('payments.datePlaceholder')}
-        valueFormat="DD.MM.YYYY"
-        clearable
-        w={160}
-        value={filter.from ? dayjs(filter.from).format('YYYY-MM-DD') : null}
-        onChange={(v) => setFilter((f) => ({ ...f, from: v ? toIso(v) : undefined }))}
-      />
-      <DateInput
-        label={t('payments.filterTo')}
-        placeholder={t('payments.datePlaceholder')}
-        valueFormat="DD.MM.YYYY"
-        clearable
-        w={160}
-        value={filter.to ? dayjs(filter.to).format('YYYY-MM-DD') : null}
-        onChange={(v) => setFilter((f) => ({ ...f, to: v ? toIso(v) : undefined }))}
-      />
-    </Group>
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="w-[220px] space-y-1.5">
+        <Label htmlFor="payments-filter-provider">{t('payments.filterProvider')}</Label>
+        <Select
+          value={filter.providerUuid ?? ALL}
+          onValueChange={(v) =>
+            setFilter((f) => ({ ...f, providerUuid: v === ALL ? undefined : v }))
+          }
+        >
+          <SelectTrigger id="payments-filter-provider" className="w-full">
+            <SelectValue placeholder={t('payments.filterAllProviders')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>{t('payments.filterAllProviders')}</SelectItem>
+            {providerOptions.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="w-[160px] space-y-1.5">
+        <Label htmlFor="payments-filter-from">{t('payments.filterFrom')}</Label>
+        <DateField
+          id="payments-filter-from"
+          placeholder={t('payments.datePlaceholder')}
+          value={filter.from ? dayjs(filter.from).format('YYYY-MM-DD') : ''}
+          onChange={(v) => setFilter((f) => ({ ...f, from: v ? toIso(v) : undefined }))}
+        />
+      </div>
+      <div className="w-[160px] space-y-1.5">
+        <Label htmlFor="payments-filter-to">{t('payments.filterTo')}</Label>
+        <DateField
+          id="payments-filter-to"
+          placeholder={t('payments.datePlaceholder')}
+          value={filter.to ? dayjs(filter.to).format('YYYY-MM-DD') : ''}
+          onChange={(v) => setFilter((f) => ({ ...f, to: v ? toIso(v) : undefined }))}
+        />
+      </div>
+    </div>
   );
 }

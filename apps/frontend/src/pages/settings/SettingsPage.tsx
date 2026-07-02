@@ -1,5 +1,5 @@
-import { SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { PageHeader } from '@/components/PageHeader';
 import { GeneralSettingsCard } from './GeneralSettingsCard';
 import { RatesCard } from './RatesCard';
 import { TelegramSettingsCard } from './TelegramSettingsCard';
@@ -7,18 +7,15 @@ import { TelegramSettingsCard } from './TelegramSettingsCard';
 export function SettingsPage() {
   const { t } = useTranslation();
   return (
-    <Stack gap="lg">
-      <div>
-        <Title order={2}>{t('settings.title')}</Title>
-        <Text c="dimmed">{t('settings.subtitle')}</Text>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
 
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <GeneralSettingsCard />
         <TelegramSettingsCard />
-      </SimpleGrid>
+      </div>
 
       <RatesCard />
-    </Stack>
+    </div>
   );
 }

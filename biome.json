@@ -9,7 +9,8 @@
       "!apps/backend/prisma/migrations",
       "!**/*.tsbuildinfo",
       "!package-lock.json",
-      "!**/*.tar.gz"
+      "!**/*.tar.gz",
+      "!apps/frontend/src/index.css"
     ]
   },
   "formatter": {
@@ -55,6 +56,28 @@
           "style": {
             "useImportType": "off"
           }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/frontend/src/components/ui/**",
+        "apps/frontend/src/components/remocn/**",
+        "apps/frontend/src/lib/remocn-ui/**"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noDocumentCookie": "off",
+            "noArrayIndexKey": "off"
+          },
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          },
+          "correctness": {
+            "useExhaustiveDependencies": "off"
+          },
+          "a11y": "off"
         }
       }
     }

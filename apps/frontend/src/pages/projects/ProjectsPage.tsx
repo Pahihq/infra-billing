@@ -1,10 +1,8 @@
-import { Button, Group, Stack, Text, Title } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { useDisclosure } from '@mantine/hooks';
+import type { Project } from '@infra/shared';
 import { IconPlus } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { Project } from '@infra/shared';
 import { apiErrorMessage } from '@/api/client';
 import {
   useCreateProject,
@@ -14,8 +12,11 @@ import {
   useProjects,
   useUpdateProject,
 } from '@/api/projects';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { notifyError, notifySuccess } from '@/utils/notify';
-import { ProjectFormModal } from './ProjectFormModal';
+import { ProjectFormModal, type ProjectFormValues } from './ProjectFormModal';
 import { ProjectsTable } from './ProjectsTable';
 
 export function ProjectsPage() {
@@ -29,24 +30,24 @@ export function ProjectsPage() {
   const [opened, { open, close }] = useDisclosure(false);
   const [editing, setEditing] = useState<Project | null>(null);
 
-  const form = useForm<{ name: string; faviconLink: string }>({
-    initialValues: { name: '', faviconLink: '' },
-    validate: { name: (v) => (v.trim() ? null : t('validation.enterName')) },
+  const form = useForm<ProjectFormValues>({
+    defaultValues: { name: '', faviconLink: '' },
+    mode: 'onSubmit',
   });
 
   const openCreate = () => {
     setEditing(null);
-    form.setValues({ name: '', faviconLink: '' });
+    form.reset({ name: '', faviconLink: '' });
     open();
   };
 
   const openEdit = (p: Project) => {
     setEditing(p);
-    form.setValues({ name: p.name, faviconLink: p.faviconLink ?? '' });
+    form.reset({ name: p.name, faviconLink: p.faviconLink ?? '' });
     open();
   };
 
-  const submit = form.onSubmit(async (v) => {
+  const submit = form.handleSubmit(async (v) => {
     const dto = { name: v.name.trim(), faviconLink: v.faviconLink.trim() || null };
     try {
       if (editing) {
@@ -92,16 +93,17 @@ export function ProjectsPage() {
   };
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>{t('projects.title')}</Title>
-          <Text c="dimmed">{t('projects.subtitle')}</Text>
-        </div>
-        <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
-          {t('common.add')}
-        </Button>
-      </Group>
+    <div className="space-y-6">
+      <PageHeader
+        title={t('projects.title')}
+        subtitle={t('projects.subtitle')}
+        actions={
+          <Button onClick={openCreate}>
+            <IconPlus className="size-4" />
+            {t('common.add')}
+          </Button>
+        }
+      />
 
       <ProjectsTable
         projects={projects}
@@ -122,6 +124,6 @@ export function ProjectsPage() {
         onSubmit={submit}
         onClose={close}
       />
-    </Stack>
+    </div>
   );
 }

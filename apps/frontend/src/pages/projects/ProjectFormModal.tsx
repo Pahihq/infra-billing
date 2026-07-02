@@ -1,13 +1,22 @@
-import { Button, Modal, Stack, TextInput } from '@mantine/core';
-import type { UseFormReturnType } from '@mantine/form';
-import { useTranslation } from 'react-i18next';
-import type { FormEventHandler } from 'react';
 import type { Project } from '@infra/shared';
+import { IconLoader2 } from '@tabler/icons-react';
+import type { FormEventHandler } from 'react';
+import type { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+export interface ProjectFormValues {
+  name: string;
+  faviconLink: string;
+}
 
 interface ProjectFormModalProps {
   opened: boolean;
   editing: Project | null;
-  form: UseFormReturnType<{ name: string; faviconLink: string }>;
+  form: UseFormReturn<ProjectFormValues>;
   isPending: boolean;
   onSubmit: FormEventHandler<HTMLFormElement>;
   onClose: () => void;
@@ -22,32 +31,44 @@ export function ProjectFormModal({
   onClose,
 }: ProjectFormModalProps) {
   const { t } = useTranslation();
+  const nameError = form.formState.errors.name;
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title={editing ? t('projects.modalEdit') : t('projects.modalCreate')}
-    >
-      <form onSubmit={onSubmit}>
-        <Stack>
-          <TextInput
-            label={t('projects.fieldName')}
-            placeholder={t('projects.namePlaceholder')}
-            required
-            data-autofocus
-            {...form.getInputProps('name')}
-          />
-          <TextInput
-            label={t('projects.fieldFavicon')}
-            description={t('projects.faviconHint')}
-            placeholder={t('projects.faviconPlaceholder')}
-            {...form.getInputProps('faviconLink')}
-          />
-          <Button type="submit" loading={isPending}>
+    <Dialog open={opened} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{editing ? t('projects.modalEdit') : t('projects.modalCreate')}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="project-name">
+              {t('projects.fieldName')} <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="project-name"
+              placeholder={t('projects.namePlaceholder')}
+              autoFocus
+              aria-invalid={nameError ? true : undefined}
+              {...form.register('name', {
+                validate: (v) => (v.trim() ? true : t('validation.enterName')),
+              })}
+            />
+            {nameError && <p className="text-xs text-destructive">{nameError.message}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="project-favicon">{t('projects.fieldFavicon')}</Label>
+            <p className="text-xs text-muted-foreground">{t('projects.faviconHint')}</p>
+            <Input
+              id="project-favicon"
+              placeholder={t('projects.faviconPlaceholder')}
+              {...form.register('faviconLink')}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending && <IconLoader2 className="size-4 animate-spin" />}
             {t('common.save')}
           </Button>
-        </Stack>
-      </form>
-    </Modal>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

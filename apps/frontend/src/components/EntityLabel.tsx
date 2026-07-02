@@ -1,4 +1,3 @@
-import { Group, Text } from '@mantine/core';
 import { ProviderIcon } from '@/components/ProviderIcon';
 
 // Provider/project favicon (or colored initial) + its name. The recurring leading cell in the
@@ -13,9 +12,9 @@ export function EntityLabel({
   size?: number;
 }) {
   return (
-    <Group gap={6} wrap="nowrap">
+    <div className="flex items-center gap-1.5">
       <ProviderIcon name={name} src={src} size={size} />
-      <Text size="sm">{name}</Text>
-    </Group>
+      <span className="text-sm">{name}</span>
+    </div>
   );
 }

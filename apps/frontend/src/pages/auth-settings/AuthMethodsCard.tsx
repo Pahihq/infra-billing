@@ -1,17 +1,18 @@
 import {
-  Alert,
-  Button,
-  Card,
-  Divider,
-  Group,
-  Stack,
-  Text,
-  TextInput,
-  ThemeIcon,
-} from '@mantine/core';
-import type { UseFormReturnType } from '@mantine/form';
-import { IconAlertTriangle, IconFingerprint, IconLock, IconPassword } from '@tabler/icons-react';
+  IconAlertTriangle,
+  IconFingerprint,
+  IconLoader2,
+  IconLock,
+  IconPassword,
+} from '@tabler/icons-react';
+import { Controller, type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { MethodRow } from './MethodRow';
 
 export interface MethodsFormValues {
@@ -23,7 +24,7 @@ export interface MethodsFormValues {
 }
 
 interface AuthMethodsCardProps {
-  form: UseFormReturnType<MethodsFormValues>;
+  form: UseFormReturn<MethodsFormValues>;
   pkOpen: boolean;
   onTogglePk: () => void;
   onUseCurrentHost: () => void;
@@ -42,73 +43,100 @@ export function AuthMethodsCard({
 }: AuthMethodsCardProps) {
   const { t } = useTranslation();
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Group gap="sm" wrap="nowrap" mb="xs">
-        <ThemeIcon variant="light" color="brand" radius="md" size="lg">
-          <IconLock size={20} stroke={1.5} />
-        </ThemeIcon>
-        <div>
-          <Text fw={600}>{t('auth.methods.title')}</Text>
-          <Text size="xs" c="dimmed">
-            {t('auth.methods.subtitle')}
-          </Text>
+    <Card className="gap-0 py-6">
+      <CardContent className="flex items-center gap-3 pb-4">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand">
+          <IconLock className="size-5" stroke={1.5} />
         </div>
-      </Group>
-      <Divider />
+        <div>
+          <p className="font-semibold">{t('auth.methods.title')}</p>
+          <p className="text-xs text-muted-foreground">{t('auth.methods.subtitle')}</p>
+        </div>
+      </CardContent>
+      <Separator />
 
-      <MethodRow
-        icon={IconPassword}
-        title={t('auth.methods.password')}
-        description={t('auth.methods.passwordDescription')}
-        enabled={form.values.passwordEnabled}
-        onToggle={(v) => form.setFieldValue('passwordEnabled', v)}
-      />
+      <CardContent>
+        <Controller
+          control={form.control}
+          name="passwordEnabled"
+          render={({ field }) => (
+            <MethodRow
+              icon={IconPassword}
+              title={t('auth.methods.password')}
+              description={t('auth.methods.passwordDescription')}
+              enabled={field.value}
+              onToggle={field.onChange}
+            />
+          )}
+        />
+      </CardContent>
 
-      <Divider />
+      <Separator />
 
-      <MethodRow
-        icon={IconFingerprint}
-        title={t('auth.methods.passkey')}
-        description={t('auth.methods.passkeyDescription')}
-        enabled={form.values.passkeyEnabled}
-        onToggle={(v) => form.setFieldValue('passkeyEnabled', v)}
-        opened={pkOpen}
-        onToggleOpen={onTogglePk}
-      >
-        <Stack gap="sm">
-          <Alert variant="light" color="yellow" icon={<IconAlertTriangle size={18} />} p="sm">
-            {t('auth.methods.warning')}
-          </Alert>
-          <TextInput
-            label={t('auth.methods.rpId')}
-            description={t('auth.methods.rpIdDescription')}
-            placeholder="example.com"
-            {...form.getInputProps('rpId')}
-          />
-          <TextInput
-            label={t('auth.methods.rpName')}
-            placeholder="Infra Billing"
-            {...form.getInputProps('rpName')}
-          />
-          <TextInput
-            label={t('auth.methods.rpOrigin')}
-            description={t('auth.methods.rpOriginDescription')}
-            placeholder="https://example.com"
-            {...form.getInputProps('rpOrigin')}
-          />
-          <Group>
-            <Button variant="subtle" size="compact-sm" onClick={onUseCurrentHost}>
-              {t('auth.methods.useCurrent')}
-            </Button>
-          </Group>
-        </Stack>
-      </MethodRow>
+      <CardContent>
+        <Controller
+          control={form.control}
+          name="passkeyEnabled"
+          render={({ field }) => (
+            <MethodRow
+              icon={IconFingerprint}
+              title={t('auth.methods.passkey')}
+              description={t('auth.methods.passkeyDescription')}
+              enabled={field.value}
+              onToggle={field.onChange}
+              opened={pkOpen}
+              onToggleOpen={onTogglePk}
+            >
+              <div className="space-y-3">
+                <Alert className="border-warning/30 bg-warning/10 text-warning [&>svg]:text-warning">
+                  <IconAlertTriangle className="size-4.5" />
+                  <AlertDescription className="text-warning">
+                    {t('auth.methods.warning')}
+                  </AlertDescription>
+                </Alert>
+                <div className="space-y-1.5">
+                  <Label htmlFor="auth-rp-id">{t('auth.methods.rpId')}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('auth.methods.rpIdDescription')}
+                  </p>
+                  <Input id="auth-rp-id" placeholder="example.com" {...form.register('rpId')} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="auth-rp-name">{t('auth.methods.rpName')}</Label>
+                  <Input
+                    id="auth-rp-name"
+                    placeholder="Infra Billing"
+                    {...form.register('rpName')}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="auth-rp-origin">{t('auth.methods.rpOrigin')}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('auth.methods.rpOriginDescription')}
+                  </p>
+                  <Input
+                    id="auth-rp-origin"
+                    placeholder="https://example.com"
+                    {...form.register('rpOrigin')}
+                  />
+                </div>
+                <div>
+                  <Button type="button" variant="ghost" size="sm" onClick={onUseCurrentHost}>
+                    {t('auth.methods.useCurrent')}
+                  </Button>
+                </div>
+              </div>
+            </MethodRow>
+          )}
+        />
+      </CardContent>
 
-      <Group justify="flex-end" mt="md">
-        <Button onClick={onSave} loading={saving}>
+      <CardContent className="flex justify-end pt-4">
+        <Button onClick={onSave} disabled={saving}>
+          {saving && <IconLoader2 className="size-4 animate-spin" />}
           {t('common.save')}
         </Button>
-      </Group>
+      </CardContent>
     </Card>
   );
 }

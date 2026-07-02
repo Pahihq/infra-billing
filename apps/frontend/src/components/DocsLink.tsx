@@ -1,8 +1,9 @@
-import { ActionIcon, Tooltip } from '@mantine/core';
 import { IconFileText } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { API_PREFIX } from '@infra/shared';
 import { useBuildInfo } from '@/api/buildInfo';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 /** Direct link to the Swagger UI, shown only when the backend has DOCS=true. */
 export function DocsLink() {
@@ -11,18 +12,15 @@ export function DocsLink() {
   if (!data?.docs) return null;
 
   return (
-    <Tooltip label={t('app.apiDocs')}>
-      <ActionIcon
-        component="a"
-        href={`/${API_PREFIX}/docs`}
-        target="_blank"
-        rel="noopener noreferrer"
-        variant="subtle"
-        color="gray"
-        aria-label={t('app.apiDocs')}
-      >
-        <IconFileText size={18} />
-      </ActionIcon>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button asChild variant="ghost" size="icon" aria-label={t('app.apiDocs')}>
+          <a href={`/${API_PREFIX}/docs`} target="_blank" rel="noopener noreferrer">
+            <IconFileText className="size-[18px]" />
+          </a>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{t('app.apiDocs')}</TooltipContent>
     </Tooltip>
   );
 }

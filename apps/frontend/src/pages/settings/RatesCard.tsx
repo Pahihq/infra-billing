@@ -1,11 +1,28 @@
-import { Button, Card, Group, Table, Text, TextInput } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { IconPlus, IconRefresh } from '@tabler/icons-react';
+import { IconLoader2, IconPlus, IconRefresh } from '@tabler/icons-react';
+import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useAddRate, useRates, useRefreshRates } from '@/api/rates';
 import { apiErrorMessage } from '@/api/client';
+import { useAddRate, useRates, useRefreshRates } from '@/api/rates';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { formatDate } from '@/utils/format';
 import { notifyError, notifySuccess } from '@/utils/notify';
+
+interface RateForm {
+  code: string;
+  rate: string;
+}
 
 export function RatesCard() {
   const { t } = useTranslation();
@@ -13,18 +30,17 @@ export function RatesCard() {
   const addRate = useAddRate();
   const refresh = useRefreshRates();
 
-  const rateForm = useForm({
-    initialValues: { code: '', rate: '' },
-    validate: {
-      code: (v) => (/^[A-Za-z]{3}$/.test(v) ? null : t('validation.code3')),
-      rate: (v) => (/^\d+(\.\d{1,8})?$/.test(v) ? null : t('validation.ratePositive')),
-    },
-  });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<RateForm>({ defaultValues: { code: '', rate: '' }, mode: 'onSubmit' });
 
-  const submitRate = rateForm.onSubmit(async (v) => {
+  const submitRate = handleSubmit(async (v) => {
     try {
       await addRate.mutateAsync({ code: v.code.toUpperCase(), rate: v.rate });
-      rateForm.reset();
+      reset();
       notifySuccess(t('settings.rates.added'));
     } catch (e) {
       notifyError(apiErrorMessage(e));
@@ -41,74 +57,102 @@ export function RatesCard() {
   };
 
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Group justify="space-between" mb="md">
-        <Text fw={600}>{t('settings.rates.title')}</Text>
-        <Button
-          variant="light"
-          leftSection={<IconRefresh size={16} />}
-          loading={refresh.isPending}
-          onClick={doRefresh}
-        >
-          {t('settings.rates.refreshFromCbr')}
-        </Button>
-      </Group>
-
-      <form onSubmit={submitRate}>
-        <Group align="flex-end" mb="md">
-          <TextInput
-            label={t('settings.rates.code')}
-            placeholder={t('settings.rates.codePlaceholder')}
-            w={120}
-            {...rateForm.getInputProps('code')}
-          />
-          <TextInput
-            label={t('settings.rates.rate')}
-            placeholder={t('settings.rates.ratePlaceholder')}
-            w={160}
-            {...rateForm.getInputProps('rate')}
-          />
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('settings.rates.title')}</CardTitle>
+        <CardAction>
           <Button
-            type="submit"
-            variant="default"
-            leftSection={<IconPlus size={16} />}
-            loading={addRate.isPending}
+            type="button"
+            variant="secondary"
+            disabled={refresh.isPending}
+            onClick={doRefresh}
           >
-            {t('settings.rates.addManual')}
+            {refresh.isPending ? (
+              <IconLoader2 className="size-4 animate-spin" />
+            ) : (
+              <IconRefresh className="size-4" />
+            )}
+            {t('settings.rates.refreshFromCbr')}
           </Button>
-        </Group>
-      </form>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form onSubmit={submitRate}>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="w-[120px] space-y-1.5">
+              <Label htmlFor="rate-code">{t('settings.rates.code')}</Label>
+              <Input
+                id="rate-code"
+                placeholder={t('settings.rates.codePlaceholder')}
+                aria-invalid={!!errors.code}
+                {...register('code', {
+                  validate: (v) => /^[A-Za-z]{3}$/.test(v) || t('validation.code3'),
+                })}
+              />
+              {errors.code && <p className="text-xs text-destructive">{errors.code.message}</p>}
+            </div>
+            <div className="w-[160px] space-y-1.5">
+              <Label htmlFor="rate-value">{t('settings.rates.rate')}</Label>
+              <Input
+                id="rate-value"
+                placeholder={t('settings.rates.ratePlaceholder')}
+                aria-invalid={!!errors.rate}
+                {...register('rate', {
+                  validate: (v) => /^\d+(\.\d{1,8})?$/.test(v) || t('validation.ratePositive'),
+                })}
+              />
+              {errors.rate && <p className="text-xs text-destructive">{errors.rate.message}</p>}
+            </div>
+            <Button type="submit" variant="outline" disabled={addRate.isPending}>
+              {addRate.isPending ? (
+                <IconLoader2 className="size-4 animate-spin" />
+              ) : (
+                <IconPlus className="size-4" />
+              )}
+              {t('settings.rates.addManual')}
+            </Button>
+          </div>
+        </form>
 
-      <Table.ScrollContainer minWidth={420}>
-        <Table verticalSpacing="xs">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>{t('settings.rates.thCurrency')}</Table.Th>
-              <Table.Th>{t('settings.rates.thRate')}</Table.Th>
-              <Table.Th>{t('settings.rates.thSource')}</Table.Th>
-              <Table.Th>{t('settings.rates.thUpdated')}</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
+        <Table className="min-w-[420px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-muted-foreground">
+                {t('settings.rates.thCurrency')}
+              </TableHead>
+              <TableHead className="text-muted-foreground">{t('settings.rates.thRate')}</TableHead>
+              <TableHead className="text-muted-foreground">
+                {t('settings.rates.thSource')}
+              </TableHead>
+              <TableHead className="text-muted-foreground">
+                {t('settings.rates.thUpdated')}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rates?.map((r) => (
-              <Table.Tr key={r.code}>
-                <Table.Td>{r.code}</Table.Td>
-                <Table.Td>{r.rate}</Table.Td>
-                <Table.Td>
-                  {r.source === 'cbr'
-                    ? t('settings.rates.sourceCbr')
-                    : t('settings.rates.sourceManual')}
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {formatDate(r.capturedAt)}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
+              <TableRow key={r.code}>
+                <TableCell className="font-medium">{r.code}</TableCell>
+                <TableCell>{r.rate}</TableCell>
+                <TableCell>
+                  {r.source === 'cbr' ? (
+                    <Badge className="border-transparent bg-brand/15 text-[10px] text-brand uppercase tracking-wide">
+                      {t('settings.rates.sourceCbr')}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+                      {t('settings.rates.sourceManual')}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {formatDate(r.capturedAt)}
+                </TableCell>
+              </TableRow>
             ))}
-          </Table.Tbody>
+          </TableBody>
         </Table>
-      </Table.ScrollContainer>
+      </CardContent>
     </Card>
   );
 }

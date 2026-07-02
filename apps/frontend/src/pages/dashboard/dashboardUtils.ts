@@ -3,18 +3,27 @@ import type { TFunction } from 'i18next';
 
 // Slice palette shared by the dashboard donuts and forecast series.
 export const DONUT_COLORS = [
-  'brand.6',
-  'teal.6',
-  'blue.6',
-  'orange.6',
-  'pink.6',
-  'grape.6',
-  'cyan.6',
-  'lime.6',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  '#e64980',
+  '#15aabf',
+  '#82c91e',
 ];
 
-export const severityColor = (s: BillingSeverity) =>
-  s === 'critical' ? 'red' : s === 'warning' ? 'orange' : undefined;
+// Severity → soft-tinted badge classes (critical=destructive, warning=warning, ok=success).
+export const severityBadgeClass = (s: BillingSeverity): string =>
+  s === 'critical'
+    ? 'border-transparent bg-destructive/15 text-destructive'
+    : s === 'warning'
+      ? 'border-transparent bg-warning/15 text-warning'
+      : 'border-transparent bg-success/15 text-success';
+
+// Severity → text accent for the row title; ok rows keep the default foreground.
+export const severityTextClass = (s: BillingSeverity): string | undefined =>
+  s === 'critical' ? 'text-destructive' : s === 'warning' ? 'text-warning' : undefined;
 
 export const dayLabel = (t: TFunction, n: number) =>
   n <= 0

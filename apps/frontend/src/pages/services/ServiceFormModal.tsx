@@ -1,17 +1,31 @@
-import { Button, Group, Modal, Select, Stack, Switch, TextInput } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
-import type { UseFormReturnType } from '@mantine/form';
-import { IconMapPin } from '@tabler/icons-react';
-import { useTranslation } from 'react-i18next';
-import type { FormEventHandler } from 'react';
 import type { Service } from '@infra/shared';
+import { IconLoader2, IconMapPin } from '@tabler/icons-react';
+import type { FormEventHandler } from 'react';
+import { Controller, type UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { DateField } from '@/components/DateField';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { trimMoney } from '@/utils/format';
 import type { SForm } from './serviceForm';
+
+// SelectItem forbids value="" — sentinel for the cleared country pick.
+const NO_COUNTRY = 'none';
 
 interface ServiceFormModalProps {
   opened: boolean;
   editing: Service | null;
-  form: UseFormReturnType<SForm>;
+  form: UseFormReturn<SForm>;
   isPending: boolean;
   providerOptions: { value: string; label: string }[];
   projectOptions: { value: string; label: string }[];
@@ -38,86 +52,240 @@ export function ServiceFormModal({
   onClose,
 }: ServiceFormModalProps) {
   const { t } = useTranslation();
+  const {
+    register,
+    control,
+    setValue,
+    formState: { errors },
+  } = form;
+
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title={editing ? t('services.modalEdit') : t('services.modalCreate')}
-    >
-      <form onSubmit={onSubmit}>
-        <Stack>
-          <Select
-            label={t('services.fieldProvider')}
-            data={providerOptions}
-            allowDeselect={false}
-            // Synced services are matched by provider, so can't be reattached elsewhere.
-            disabled={Boolean(editing?.isManaged)}
-            description={editing?.isManaged ? t('services.providerLockedHint') : undefined}
-            {...form.getInputProps('providerUuid')}
-          />
-          <Select
-            label={t('services.fieldProject')}
-            data={projectOptions}
-            allowDeselect={false}
-            {...form.getInputProps('projectUuid')}
-          />
-          <TextInput label={t('services.fieldName')} required {...form.getInputProps('name')} />
-          <Group grow>
-            <Select
-              label={t('services.fieldType')}
-              data={typeOptions}
-              allowDeselect={false}
-              {...form.getInputProps('type')}
+    <Dialog open={opened} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{editing ? t('services.modalEdit') : t('services.modalCreate')}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="service-provider">{t('services.fieldProvider')}</Label>
+            <Controller
+              control={control}
+              name="providerUuid"
+              rules={{ validate: (v) => (v ? true : t('validation.selectProvider')) }}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  // Synced services are matched by provider, so can't be reattached elsewhere.
+                  disabled={Boolean(editing?.isManaged)}
+                >
+                  <SelectTrigger id="service-provider" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {providerOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-            <Select
-              label={t('services.fieldPeriod')}
-              data={periodOptions}
-              allowDeselect={false}
-              {...form.getInputProps('period')}
+            {editing?.isManaged && (
+              <p className="text-xs text-muted-foreground">{t('services.providerLockedHint')}</p>
+            )}
+            {errors.providerUuid && (
+              <p className="text-xs text-destructive">{errors.providerUuid.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="service-project">{t('services.fieldProject')}</Label>
+            <Controller
+              control={control}
+              name="projectUuid"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="service-project" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-          </Group>
-          <Group grow>
-            <TextInput
-              label={t('services.fieldCost')}
-              required
-              {...form.getInputProps('cost')}
-              onBlur={(e) => form.setFieldValue('cost', trimMoney(e.currentTarget.value))}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="service-name">
+              {t('services.fieldName')} <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="service-name"
+              aria-invalid={!!errors.name}
+              {...register('name', {
+                validate: (v) => (v.trim() ? true : t('validation.enterName')),
+              })}
             />
-            <Select
-              label={t('services.fieldCurrency')}
-              data={currencyOptions}
-              allowDeselect={false}
-              {...form.getInputProps('currency')}
+            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="service-type">{t('services.fieldType')}</Label>
+              <Controller
+                control={control}
+                name="type"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="service-type" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {typeOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-period">{t('services.fieldPeriod')}</Label>
+              <Controller
+                control={control}
+                name="period"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="service-period" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {periodOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="service-cost">
+                {t('services.fieldCost')} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="service-cost"
+                aria-invalid={!!errors.cost}
+                {...register('cost', {
+                  // Accept any number of decimals. Extra ones are trimmed to 2 (on blur + submit).
+                  validate: (v) => (/^\d+(\.\d+)?$/.test(v) ? true : t('validation.amountFormat')),
+                  onBlur: (e) => setValue('cost', trimMoney(e.target.value)),
+                })}
+              />
+              {errors.cost && <p className="text-xs text-destructive">{errors.cost.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-currency">{t('services.fieldCurrency')}</Label>
+              <Controller
+                control={control}
+                name="currency"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="service-currency" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencyOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="service-country">{t('services.fieldCountry')}</Label>
+              <Controller
+                control={control}
+                name="countryCode"
+                render={({ field }) => (
+                  <Select
+                    value={field.value || NO_COUNTRY}
+                    onValueChange={(v) => field.onChange(v === NO_COUNTRY ? '' : v)}
+                  >
+                    <SelectTrigger id="service-country" className="w-full">
+                      <IconMapPin className="size-4 shrink-0 opacity-60" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_COUNTRY}>{t('services.countryPlaceholder')}</SelectItem>
+                      {countryOptions.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-next-billing">{t('services.fieldNextBilling')}</Label>
+              <Controller
+                control={control}
+                name="nextBillingAt"
+                render={({ field }) => (
+                  <DateField
+                    id="service-next-billing"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder={t('services.nextBillingPlaceholder')}
+                    clearable
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Controller
+              control={control}
+              name="isActive"
+              render={({ field }) => (
+                <Switch
+                  id="service-active"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
             />
-          </Group>
-          <Group grow>
-            <Select
-              label={t('services.fieldCountry')}
-              placeholder={t('services.countryPlaceholder')}
-              searchable
-              clearable
-              data={countryOptions}
-              leftSection={<IconMapPin size={16} />}
-              {...form.getInputProps('countryCode')}
-            />
-            <DateInput
-              label={t('services.fieldNextBilling')}
-              clearable
-              valueFormat="DD.MM.YYYY"
-              placeholder={t('services.nextBillingPlaceholder')}
-              value={form.values.nextBillingAt || null}
-              onChange={(v) => form.setFieldValue('nextBillingAt', v ?? '')}
-            />
-          </Group>
-          <Switch
-            label={t('services.fieldActive')}
-            {...form.getInputProps('isActive', { type: 'checkbox' })}
-          />
-          <Button type="submit" loading={isPending}>
+            <Label htmlFor="service-active">{t('services.fieldActive')}</Label>
+          </div>
+
+          <Button type="submit" disabled={isPending} className="w-full">
+            {isPending && <IconLoader2 className="size-4 animate-spin" />}
             {t('common.save')}
           </Button>
-        </Stack>
-      </form>
-    </Modal>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

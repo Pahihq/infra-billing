@@ -1,20 +1,4 @@
 import {
-  ActionIcon,
-  AppShell,
-  Avatar,
-  Box,
-  Burger,
-  Group,
-  NavLink,
-  ScrollArea,
-  Stack,
-  Text,
-  ThemeIcon,
-  Tooltip,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import {
-  IconCoin,
   IconFolders,
   IconKey,
   IconLayoutDashboard,
@@ -34,6 +18,25 @@ import { DocsLink } from '@/components/DocsLink';
 import { GithubStars } from '@/components/GithubStars';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface NavItem {
   to: string;
@@ -66,103 +69,115 @@ const NAV: { sectionKey: string; items: NavItem[] }[] = [
   },
 ];
 
-export function AppLayout() {
+function NavGroups() {
   const { pathname } = useLocation();
+  const { t } = useTranslation();
+  const { setOpenMobile } = useSidebar();
+
+  return (
+    <>
+      {NAV.map((group) => (
+        <SidebarGroup key={group.sectionKey}>
+          <SidebarGroupLabel className="section-label">{t(group.sectionKey)}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {group.items.map((it) => {
+                const active = it.end ? pathname === it.to : pathname.startsWith(it.to);
+                const ItemIcon = it.icon;
+                return (
+                  <SidebarMenuItem key={it.to}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold"
+                    >
+                      <RouterNavLink to={it.to} end={it.end} onClick={() => setOpenMobile(false)}>
+                        <ItemIcon className="size-[18px]" stroke={1.5} />
+                        <span>{t(it.labelKey)}</span>
+                      </RouterNavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      ))}
+    </>
+  );
+}
+
+function UserBlock() {
   const { t } = useTranslation();
   const me = useMe();
   const logout = useLogout();
-  const [navOpened, { toggle: toggleNav, close: closeNav }] = useDisclosure(false);
 
   return (
-    <AppShell
-      header={{ height: 56 }}
-      navbar={{ width: 260, breakpoint: 'sm', collapsed: { mobile: !navOpened } }}
-      padding={{ base: 'md', sm: 'lg' }}
-    >
-      <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
-          <Group gap="xs" wrap="nowrap">
-            <Burger opened={navOpened} onClick={toggleNav} hiddenFrom="sm" size="sm" />
-            <ThemeIcon variant="light" color="brand" radius="md">
-              <IconCoin size={18} />
-            </ThemeIcon>
-            <Text fw={700}>Infra Billing</Text>
-          </Group>
-          <Group gap="xs" wrap="nowrap">
-            <Box visibleFrom="sm">
-              <GithubStars />
-            </Box>
-            <DocsLink />
-            <ThemeToggle />
-            <LanguageSwitcher />
-            <Box visibleFrom="sm">
-              <BuildInfo />
-            </Box>
-          </Group>
-        </Group>
-      </AppShell.Header>
+    <div className="flex items-center justify-between gap-2 p-2">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <Avatar className="size-9">
+          <AvatarFallback className="bg-brand/15 font-bold text-brand">
+            {(me.data?.username ?? 'A').charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{me.data?.username ?? '—'}</p>
+          <p className="truncate text-xs text-muted-foreground">{t('app.singleUser')}</p>
+        </div>
+      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('app.logout')}
+            disabled={logout.isPending}
+            onClick={() => logout.mutate()}
+          >
+            <IconLogout className="size-[18px]" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{t('app.logout')}</TooltipContent>
+      </Tooltip>
+    </div>
+  );
+}
 
-      <AppShell.Navbar p="sm">
-        <AppShell.Section grow component={ScrollArea}>
-          <Stack gap="lg">
-            {NAV.map((group) => (
-              <div key={group.sectionKey}>
-                <Text size="xs" c="dimmed" fw={700} tt="uppercase" px="sm" mb={6}>
-                  {t(group.sectionKey)}
-                </Text>
-                {group.items.map((it) => {
-                  const active = it.end ? pathname === it.to : pathname.startsWith(it.to);
-                  const ItemIcon = it.icon;
-                  return (
-                    <NavLink
-                      key={it.to}
-                      component={RouterNavLink}
-                      to={it.to}
-                      end={it.end}
-                      active={active}
-                      label={t(it.labelKey)}
-                      leftSection={<ItemIcon size={18} stroke={1.5} />}
-                      onClick={closeNav}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </Stack>
-        </AppShell.Section>
+export function AppLayout() {
+  return (
+    <SidebarProvider>
+      <Sidebar collapsible="offcanvas">
+        <SidebarHeader>
+          <div className="flex items-center px-2 pt-2 pb-0.5">
+            <span className="text-[17px] font-extrabold tracking-tight">Infra Billing</span>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <NavGroups />
+        </SidebarContent>
+        <SidebarFooter>
+          <UserBlock />
+        </SidebarFooter>
+      </Sidebar>
 
-        <AppShell.Section>
-          <Group gap="sm" p="sm" justify="space-between" wrap="nowrap">
-            <Group gap="sm" wrap="nowrap">
-              <Avatar color="brand" radius="xl">
-                {(me.data?.username ?? 'A').charAt(0).toUpperCase()}
-              </Avatar>
-              <Box>
-                <Text size="sm" fw={600}>
-                  {me.data?.username ?? '—'}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {t('app.singleUser')}
-                </Text>
-              </Box>
-            </Group>
-            <Tooltip label={t('app.logout')}>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => logout.mutate()}
-                loading={logout.isPending}
-              >
-                <IconLogout size={18} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-        </AppShell.Section>
-      </AppShell.Navbar>
-
-      <AppShell.Main>
-        <Outlet />
-      </AppShell.Main>
-    </AppShell>
+      <SidebarInset>
+        <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-1.5 border-b bg-background/85 px-3 backdrop-blur sm:px-4">
+          <SidebarTrigger className="-ml-1" />
+          <div className="flex-1" />
+          <div className="hidden sm:block">
+            <GithubStars />
+          </div>
+          <DocsLink />
+          <ThemeToggle />
+          <LanguageSwitcher />
+          <div className="hidden sm:block">
+            <BuildInfo />
+          </div>
+        </header>
+        <main className="flex-1 p-4 sm:p-6">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

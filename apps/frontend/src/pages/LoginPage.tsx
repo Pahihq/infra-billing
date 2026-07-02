@@ -1,76 +1,77 @@
-import {
-  Alert,
-  Button,
-  Card,
-  Center,
-  Divider,
-  Loader,
-  PasswordInput,
-  Stack,
-  Text,
-  TextInput,
-  ThemeIcon,
-} from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { zodResolver } from 'mantine-form-zod-resolver';
-import { IconArrowsShuffle, IconCoin, IconFingerprint } from '@tabler/icons-react';
-import { useTranslation } from 'react-i18next';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { type LoginInput, loginSchema } from '@infra/shared';
+import { IconArrowsShuffle, IconFingerprint, IconLoader2 } from '@tabler/icons-react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useLogin, usePasskeyLogin, useSetup, useSetupStatus } from '@/api/auth';
 import { apiErrorMessage } from '@/api/client';
 import { mapPasskeyError, passkeySupported } from '@/api/webauthn';
+import { PasswordInput } from '@/components/PasswordInput';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { notifyError, notifySuccess } from '@/utils/notify';
 import { generatePassword } from '@/utils/password';
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const status = useSetupStatus();
 
   return (
-    <Center h="100vh" px="md">
-      <Card withBorder radius="md" padding="xl" w="100%" maw={360}>
-        <Stack align="center" gap="xs" mb="md">
-          <ThemeIcon variant="light" color="brand" radius="md" size="lg">
-            <IconCoin size={22} />
-          </ThemeIcon>
-          <Text fw={700} size="lg">
-            Infra Billing
-          </Text>
-        </Stack>
+    // Force the dark class: this artwork page is always dark regardless of the theme.
+    <div className="dark relative min-h-svh bg-[#0a0a0c] text-foreground">
+      <div className="relative z-10 flex min-h-svh items-center justify-center px-4 py-10">
+        <div className="w-full max-w-sm space-y-6">
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight text-white">{t('app.brand')}</h1>
+            <p className="text-sm text-muted-foreground">{t('dashboard.subtitle')}</p>
+          </div>
 
-        {status.isLoading ? (
-          <Center py="lg">
-            <Loader />
-          </Center>
-        ) : status.data?.needsSetup ? (
-          <SetupForm />
-        ) : (
-          <SignInForm
-            passwordEnabled={status.data?.passwordEnabled ?? true}
-            passkeyEnabled={status.data?.passkeyEnabled ?? false}
-          />
-        )}
-      </Card>
-    </Center>
+          {status.isLoading ? (
+            <div className="flex justify-center py-8">
+              <IconLoader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : status.data?.needsSetup ? (
+            <SetupForm />
+          ) : (
+            <SignInForm
+              passwordEnabled={status.data?.passwordEnabled ?? true}
+              passkeyEnabled={status.data?.passkeyEnabled ?? false}
+            />
+          )}
+        </div>
+      </div>
+    </div>
   );
+}
+
+interface SetupValues {
+  username: string;
+  password: string;
+  confirm: string;
 }
 
 function SetupForm() {
   const { t } = useTranslation();
   const setup = useSetup();
-  const form = useForm({
-    initialValues: { username: '', password: '', confirm: '' },
-    validate: {
-      username: (v) => (v.trim().length >= 1 ? null : t('validation.enterName')),
-      password: (v) => (v.length >= 8 ? null : t('login.setup.passwordShort')),
-      confirm: (v, values) => (v === values.password ? null : t('login.setup.mismatch')),
-    },
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<SetupValues>({
+    defaultValues: { username: '', password: '', confirm: '' },
+    mode: 'onSubmit',
   });
 
   // clipboard.writeText needs a secure context (https/localhost). If it fails, tell the owner
   // to copy manually instead of claiming a copy that didn't happen.
   const generate = async () => {
     const password = generatePassword();
-    form.setValues({ password, confirm: password });
+    setValue('password', password);
+    setValue('confirm', password);
     try {
       await navigator.clipboard.writeText(password);
       notifySuccess(t('login.setup.passwordGenerated'));
@@ -80,46 +81,70 @@ function SetupForm() {
   };
 
   return (
-    <Stack gap="xs">
-      <div>
-        <Text fw={600}>{t('login.setup.title')}</Text>
-        <Text c="dimmed" size="sm">
-          {t('login.setup.subtitle')}
-        </Text>
+    <div className="space-y-4">
+      <div className="text-center">
+        <p className="font-semibold">{t('login.setup.title')}</p>
+        <p className="text-sm text-muted-foreground">{t('login.setup.subtitle')}</p>
       </div>
       <form
-        onSubmit={form.onSubmit((v) =>
-          setup.mutate({ username: v.username, password: v.password }),
-        )}
+        noValidate
+        className="space-y-4"
+        onSubmit={handleSubmit((v) => setup.mutate({ username: v.username, password: v.password }))}
       >
-        <Stack>
-          <TextInput label={t('login.username')} required {...form.getInputProps('username')} />
-          <PasswordInput label={t('login.password')} required {...form.getInputProps('password')} />
-          <PasswordInput
-            label={t('login.setup.confirm')}
-            required
-            {...form.getInputProps('confirm')}
+        <div className="space-y-2">
+          <Label htmlFor="setup-username">
+            {t('login.username')} <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="setup-username"
+            aria-invalid={errors.username ? true : undefined}
+            {...register('username', {
+              validate: (v) => v.trim().length >= 1 || t('validation.enterName'),
+            })}
           />
-          <Button
-            type="button"
-            variant="light"
-            fullWidth
-            leftSection={<IconArrowsShuffle size={16} />}
-            onClick={generate}
-          >
-            {t('login.setup.generate')}
-          </Button>
-          {setup.isError && (
-            <Text c="red" size="sm">
-              {apiErrorMessage(setup.error, t('login.failed'))}
-            </Text>
-          )}
-          <Button type="submit" loading={setup.isPending} fullWidth mt="xs">
-            {t('login.setup.submit')}
-          </Button>
-        </Stack>
+          {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="setup-password">
+            {t('login.password')} <span className="text-destructive">*</span>
+          </Label>
+          <PasswordInput
+            id="setup-password"
+            aria-invalid={errors.password ? true : undefined}
+            {...register('password', {
+              validate: (v) => v.length >= 8 || t('login.setup.passwordShort'),
+            })}
+          />
+          {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="setup-confirm">
+            {t('login.setup.confirm')} <span className="text-destructive">*</span>
+          </Label>
+          <PasswordInput
+            id="setup-confirm"
+            aria-invalid={errors.confirm ? true : undefined}
+            {...register('confirm', {
+              validate: (v, values) => v === values.password || t('login.setup.mismatch'),
+            })}
+          />
+          {errors.confirm && <p className="text-xs text-destructive">{errors.confirm.message}</p>}
+        </div>
+        <Button type="button" variant="secondary" className="w-full" onClick={generate}>
+          <IconArrowsShuffle className="size-4" />
+          {t('login.setup.generate')}
+        </Button>
+        {setup.isError && (
+          <p className="text-sm text-destructive">
+            {apiErrorMessage(setup.error, t('login.failed'))}
+          </p>
+        )}
+        <Button type="submit" className="w-full" disabled={setup.isPending}>
+          {setup.isPending && <IconLoader2 className="size-4 animate-spin" />}
+          {t('login.setup.submit')}
+        </Button>
       </form>
-    </Stack>
+    </div>
   );
 }
 
@@ -133,9 +158,14 @@ function SignInForm({
   const { t } = useTranslation();
   const login = useLogin();
   const passkeyLogin = usePasskeyLogin();
-  const form = useForm<LoginInput>({
-    initialValues: { username: '', password: '' },
-    validate: zodResolver(loginSchema),
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginInput>({
+    defaultValues: { username: '', password: '' },
+    mode: 'onSubmit',
+    resolver: zodResolver(loginSchema),
   });
 
   const canPasskey = passkeyEnabled && passkeySupported();
@@ -150,50 +180,88 @@ function SignInForm({
   };
 
   if (!passwordEnabled && !passkeyEnabled) {
-    return <Alert color="yellow">{t('login.noMethods')}</Alert>;
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{t('login.noMethods')}</AlertDescription>
+      </Alert>
+    );
   }
 
   return (
-    <Stack>
+    <div className="space-y-4">
       {passwordEnabled && (
-        <form onSubmit={form.onSubmit((values) => login.mutate(values))}>
-          <Stack>
-            <TextInput label={t('login.username')} required {...form.getInputProps('username')} />
-            <PasswordInput
-              label={t('login.password')}
-              required
-              {...form.getInputProps('password')}
+        <form
+          noValidate
+          className="space-y-4"
+          onSubmit={handleSubmit((values) => login.mutate(values))}
+        >
+          <div className="space-y-2">
+            <Label htmlFor="login-username">
+              {t('login.username')} <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="login-username"
+              aria-invalid={errors.username ? true : undefined}
+              {...register('username')}
             />
-            {login.isError && (
-              <Text c="red" size="sm">
-                {apiErrorMessage(login.error, t('login.failed'))}
-              </Text>
+            {errors.username && (
+              <p className="text-xs text-destructive">{errors.username.message}</p>
             )}
-            <Button type="submit" loading={login.isPending} fullWidth>
-              {t('login.signIn')}
-            </Button>
-          </Stack>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="login-password">
+              {t('login.password')} <span className="text-destructive">*</span>
+            </Label>
+            <PasswordInput
+              id="login-password"
+              aria-invalid={errors.password ? true : undefined}
+              {...register('password')}
+            />
+            {errors.password && (
+              <p className="text-xs text-destructive">{errors.password.message}</p>
+            )}
+          </div>
+          {login.isError && (
+            <p className="text-sm text-destructive">
+              {apiErrorMessage(login.error, t('login.failed'))}
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={login.isPending}>
+            {login.isPending && <IconLoader2 className="size-4 animate-spin" />}
+            {t('login.signIn')}
+          </Button>
         </form>
       )}
 
-      {passwordEnabled && canPasskey && <Divider label={t('login.or')} labelPosition="center" />}
+      {passwordEnabled && canPasskey && (
+        <div className="flex items-center gap-3">
+          <Separator className="flex-1" />
+          <span className="text-xs text-muted-foreground">{t('login.or')}</span>
+          <Separator className="flex-1" />
+        </div>
+      )}
 
       {passkeyEnabled &&
         (canPasskey ? (
           <Button
-            variant="default"
-            leftSection={<IconFingerprint size={16} />}
-            loading={passkeyLogin.isPending}
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={passkeyLogin.isPending}
             onClick={doPasskey}
-            fullWidth
           >
+            {passkeyLogin.isPending ? (
+              <IconLoader2 className="size-4 animate-spin" />
+            ) : (
+              <IconFingerprint className="size-4" />
+            )}
             {t('login.passkey')}
           </Button>
         ) : (
-          <Text c="dimmed" size="xs" ta="center">
+          <p className="text-center text-xs text-muted-foreground">
             {t('auth.passkeys.unsupported')}
-          </Text>
+          </p>
         ))}
-    </Stack>
+    </div>
   );
 }

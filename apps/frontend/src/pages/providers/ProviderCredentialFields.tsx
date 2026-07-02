@@ -1,189 +1,308 @@
-import { PasswordInput, TextInput } from '@mantine/core';
-import type { UseFormReturnType } from '@mantine/form';
+import type { ReactNode } from 'react';
+import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { NetcupAuthorizeButton } from '@/components/NetcupAuthorizeButton';
+import { PasswordInput } from '@/components/PasswordInput';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { FormValues } from './providerForm';
 
 interface ProviderCredentialFieldsProps {
-  form: UseFormReturnType<FormValues>;
+  form: UseFormReturn<FormValues>;
   editing: boolean;
+}
+
+/** Field wrapper: label plus an optional description above the input. */
+function Field({
+  id,
+  label,
+  description,
+  children,
+}: {
+  id: string;
+  label: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
+      {children}
+    </div>
+  );
 }
 
 // The per-connector credential inputs, switched on the selected kind. Secret inputs use the
 // "keep empty to keep unchanged" placeholder when editing.
 export function ProviderCredentialFields({ form, editing }: ProviderCredentialFieldsProps) {
   const { t } = useTranslation();
-  return form.values.kind === 'selectel' ? (
-    <>
-      <TextInput
-        label={t('providers.field.accountId')}
-        description={t('providers.field.accountIdDesc')}
-        placeholder="123456"
-        {...form.getInputProps('accountId')}
-      />
-      <TextInput
-        label={t('providers.field.serviceUsername')}
-        description={t('providers.field.serviceUsernameDesc')}
-        {...form.getInputProps('username')}
-      />
-      <PasswordInput
-        label={t('providers.field.password')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('password')}
-      />
-      <TextInput
-        label={t('providers.field.project')}
-        description={t('providers.field.projectDesc')}
-        placeholder="my-project"
-        {...form.getInputProps('projectName')}
-      />
-    </>
-  ) : form.values.kind === 'cloudflare' ? (
-    <>
-      <TextInput
-        label={t('providers.field.accountId')}
-        description={t('providers.field.cloudflareAccountIdDesc')}
-        {...form.getInputProps('accountId')}
-      />
-      <PasswordInput
+  const kind = form.watch('kind');
+  const keepEmpty = editing ? t('providers.keepEmpty') : '';
+  const keepEmptyOrOptional = editing ? t('providers.keepEmpty') : t('common.optional');
+
+  if (kind === 'selectel') {
+    return (
+      <>
+        <Field
+          id="cred-account-id"
+          label={t('providers.field.accountId')}
+          description={t('providers.field.accountIdDesc')}
+        >
+          <Input id="cred-account-id" placeholder="123456" {...form.register('accountId')} />
+        </Field>
+        <Field
+          id="cred-username"
+          label={t('providers.field.serviceUsername')}
+          description={t('providers.field.serviceUsernameDesc')}
+        >
+          <Input id="cred-username" {...form.register('username')} />
+        </Field>
+        <Field id="cred-password" label={t('providers.field.password')}>
+          <PasswordInput
+            id="cred-password"
+            placeholder={keepEmpty}
+            {...form.register('password')}
+          />
+        </Field>
+        <Field
+          id="cred-project"
+          label={t('providers.field.project')}
+          description={t('providers.field.projectDesc')}
+        >
+          <Input id="cred-project" placeholder="my-project" {...form.register('projectName')} />
+        </Field>
+      </>
+    );
+  }
+
+  if (kind === 'cloudflare') {
+    return (
+      <>
+        <Field
+          id="cred-account-id"
+          label={t('providers.field.accountId')}
+          description={t('providers.field.cloudflareAccountIdDesc')}
+        >
+          <Input id="cred-account-id" {...form.register('accountId')} />
+        </Field>
+        <Field
+          id="cred-token"
+          label={t('providers.field.apiToken')}
+          description={t('providers.field.apiTokenDescCloudflare')}
+        >
+          <PasswordInput id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+        </Field>
+      </>
+    );
+  }
+
+  if (kind === 'hostbill' || kind === 'billmgr') {
+    return (
+      <>
+        <Field id="cred-base-url" label={t('providers.field.apiBaseUrl')}>
+          <Input
+            id="cred-base-url"
+            placeholder={
+              kind === 'billmgr' ? 'https://my.akenai.host/billmgr' : 'https://secure.veesp.com/api'
+            }
+            {...form.register('baseUrl')}
+          />
+        </Field>
+        <Field id="cred-username" label={t('providers.field.loginEmail')}>
+          <Input id="cred-username" {...form.register('username')} />
+        </Field>
+        <Field id="cred-password" label={t('providers.field.password')}>
+          <PasswordInput
+            id="cred-password"
+            placeholder={keepEmpty}
+            {...form.register('password')}
+          />
+        </Field>
+        {kind === 'billmgr' && (
+          <Field
+            id="cred-totp"
+            label={t('providers.field.totpSecret')}
+            description={t('providers.field.totpSecretDesc')}
+          >
+            <PasswordInput
+              id="cred-totp"
+              placeholder={keepEmptyOrOptional}
+              {...form.register('totpSecret')}
+            />
+          </Field>
+        )}
+      </>
+    );
+  }
+
+  if (kind === '4vps') {
+    return (
+      <>
+        <Field
+          id="cred-token"
+          label={t('providers.field.apiToken')}
+          description={t('providers.field.apiTokenDesc4vps')}
+        >
+          <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+        </Field>
+        <Field
+          id="cred-panel-id"
+          label={t('providers.field.panelId')}
+          description={t('providers.field.panelIdDesc')}
+        >
+          <Input id="cred-panel-id" placeholder="1" {...form.register('panelId')} />
+        </Field>
+      </>
+    );
+  }
+
+  if (kind === 'netcup') {
+    return (
+      <>
+        <NetcupAuthorizeButton
+          onToken={(tok) => form.setValue('token', tok, { shouldDirty: true })}
+        />
+        <Field
+          id="cred-token"
+          label={t('providers.field.refreshToken')}
+          description={t('providers.field.refreshTokenDescNetcup')}
+        >
+          <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+        </Field>
+      </>
+    );
+  }
+
+  if (kind === 'netlen') {
+    return (
+      <Field
+        id="cred-token"
         label={t('providers.field.apiToken')}
-        description={t('providers.field.apiTokenDescCloudflare')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('token')}
-      />
-    </>
-  ) : form.values.kind === 'hostbill' || form.values.kind === 'billmgr' ? (
-    <>
-      <TextInput
-        label={t('providers.field.apiBaseUrl')}
-        placeholder={
-          form.values.kind === 'billmgr'
-            ? 'https://my.akenai.host/billmgr'
-            : 'https://secure.veesp.com/api'
-        }
-        {...form.getInputProps('baseUrl')}
-      />
-      <TextInput label={t('providers.field.loginEmail')} {...form.getInputProps('username')} />
-      <PasswordInput
-        label={t('providers.field.password')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('password')}
-      />
-      {form.values.kind === 'billmgr' && (
-        <PasswordInput
+        description={t('providers.field.apiTokenDescNetlen')}
+      >
+        <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+      </Field>
+    );
+  }
+
+  if (kind === 'vultr') {
+    return (
+      <Field
+        id="cred-token"
+        label={t('providers.field.apiToken')}
+        description={t('providers.field.apiTokenDescVultr')}
+      >
+        <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+      </Field>
+    );
+  }
+
+  if (kind === 'linode') {
+    return (
+      <Field
+        id="cred-token"
+        label={t('providers.field.apiToken')}
+        description={t('providers.field.apiTokenDescLinode')}
+      >
+        <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+      </Field>
+    );
+  }
+
+  if (kind === 'aeza') {
+    return (
+      <Field
+        id="cred-token"
+        label={t('providers.field.apiToken')}
+        description={t('providers.field.apiTokenDescAeza')}
+      >
+        <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+      </Field>
+    );
+  }
+
+  if (kind === 'stormwall') {
+    return (
+      <Field
+        id="cred-token"
+        label={t('providers.field.apiToken')}
+        description={t('providers.field.apiTokenDescStormwall')}
+      >
+        <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+      </Field>
+    );
+  }
+
+  if (kind === 'beget') {
+    return (
+      <>
+        <Field
+          id="cred-username"
+          label={t('providers.field.begetLogin')}
+          description={t('providers.field.begetLoginDesc')}
+        >
+          <Input id="cred-username" {...form.register('username')} />
+        </Field>
+        <Field id="cred-password" label={t('providers.field.password')}>
+          <PasswordInput
+            id="cred-password"
+            placeholder={keepEmpty}
+            {...form.register('password')}
+          />
+        </Field>
+        <Field
+          id="cred-totp"
           label={t('providers.field.totpSecret')}
           description={t('providers.field.totpSecretDesc')}
-          placeholder={editing ? t('providers.keepEmpty') : t('common.optional')}
-          {...form.getInputProps('totpSecret')}
-        />
-      )}
-    </>
-  ) : form.values.kind === '4vps' ? (
-    <>
-      <TextInput
-        label={t('providers.field.apiToken')}
-        description={t('providers.field.apiTokenDesc4vps')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('token')}
-      />
-      <TextInput
-        label={t('providers.field.panelId')}
-        description={t('providers.field.panelIdDesc')}
-        placeholder="1"
-        {...form.getInputProps('panelId')}
-      />
-    </>
-  ) : form.values.kind === 'netcup' ? (
-    <>
-      <NetcupAuthorizeButton onToken={(tok) => form.setFieldValue('token', tok)} />
-      <TextInput
-        label={t('providers.field.refreshToken')}
-        description={t('providers.field.refreshTokenDescNetcup')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('token')}
-      />
-    </>
-  ) : form.values.kind === 'netlen' ? (
-    <TextInput
-      label={t('providers.field.apiToken')}
-      description={t('providers.field.apiTokenDescNetlen')}
-      placeholder={editing ? t('providers.keepEmpty') : ''}
-      {...form.getInputProps('token')}
-    />
-  ) : form.values.kind === 'vultr' ? (
-    <TextInput
-      label={t('providers.field.apiToken')}
-      description={t('providers.field.apiTokenDescVultr')}
-      placeholder={editing ? t('providers.keepEmpty') : ''}
-      {...form.getInputProps('token')}
-    />
-  ) : form.values.kind === 'linode' ? (
-    <TextInput
-      label={t('providers.field.apiToken')}
-      description={t('providers.field.apiTokenDescLinode')}
-      placeholder={editing ? t('providers.keepEmpty') : ''}
-      {...form.getInputProps('token')}
-    />
-  ) : form.values.kind === 'aeza' ? (
-    <TextInput
-      label={t('providers.field.apiToken')}
-      description={t('providers.field.apiTokenDescAeza')}
-      placeholder={editing ? t('providers.keepEmpty') : ''}
-      {...form.getInputProps('token')}
-    />
-  ) : form.values.kind === 'stormwall' ? (
-    <TextInput
-      label={t('providers.field.apiToken')}
-      description={t('providers.field.apiTokenDescStormwall')}
-      placeholder={editing ? t('providers.keepEmpty') : ''}
-      {...form.getInputProps('token')}
-    />
-  ) : form.values.kind === 'beget' ? (
-    <>
-      <TextInput
-        label={t('providers.field.begetLogin')}
-        description={t('providers.field.begetLoginDesc')}
-        {...form.getInputProps('username')}
-      />
-      <PasswordInput
-        label={t('providers.field.password')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('password')}
-      />
-      <PasswordInput
-        label={t('providers.field.totpSecret')}
-        description={t('providers.field.totpSecretDesc')}
-        placeholder={editing ? t('providers.keepEmpty') : t('common.optional')}
-        {...form.getInputProps('totpSecret')}
-      />
-      <PasswordInput
-        label={t('providers.field.begetApiPassword')}
-        description={t('providers.field.begetApiPasswordDesc')}
-        placeholder={editing ? t('providers.keepEmpty') : t('common.optional')}
-        {...form.getInputProps('apiPassword')}
-      />
-    </>
-  ) : form.values.kind === 'porkbun' ? (
-    <>
-      <TextInput
-        label={t('providers.field.porkbunApiKey')}
-        description={t('providers.field.porkbunApiKeyDesc')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('token')}
-      />
-      <PasswordInput
-        label={t('providers.field.porkbunSecretKey')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('secretKey')}
-      />
-    </>
-  ) : (
-    form.values.kind !== 'manual' && (
-      <TextInput
-        label={t('providers.field.apiToken')}
-        placeholder={editing ? t('providers.keepEmpty') : ''}
-        {...form.getInputProps('token')}
-      />
-    )
+        >
+          <PasswordInput
+            id="cred-totp"
+            placeholder={keepEmptyOrOptional}
+            {...form.register('totpSecret')}
+          />
+        </Field>
+        <Field
+          id="cred-api-password"
+          label={t('providers.field.begetApiPassword')}
+          description={t('providers.field.begetApiPasswordDesc')}
+        >
+          <PasswordInput
+            id="cred-api-password"
+            placeholder={keepEmptyOrOptional}
+            {...form.register('apiPassword')}
+          />
+        </Field>
+      </>
+    );
+  }
+
+  if (kind === 'porkbun') {
+    return (
+      <>
+        <Field
+          id="cred-token"
+          label={t('providers.field.porkbunApiKey')}
+          description={t('providers.field.porkbunApiKeyDesc')}
+        >
+          <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+        </Field>
+        <Field id="cred-secret-key" label={t('providers.field.porkbunSecretKey')}>
+          <PasswordInput
+            id="cred-secret-key"
+            placeholder={keepEmpty}
+            {...form.register('secretKey')}
+          />
+        </Field>
+      </>
+    );
+  }
+
+  if (kind === 'manual') return null;
+
+  return (
+    <Field id="cred-token" label={t('providers.field.apiToken')}>
+      <Input id="cred-token" placeholder={keepEmpty} {...form.register('token')} />
+    </Field>
   );
 }

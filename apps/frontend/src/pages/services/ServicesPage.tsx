@@ -1,11 +1,9 @@
-import { Button, Group, Stack, Text, Title } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { useDisclosure } from '@mantine/hooks';
+import { DEFAULT_PROJECT_UUID, type Period, type Service, type ServiceType } from '@infra/shared';
 import { IconPlus } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { DEFAULT_PROJECT_UUID, type Period, type Service, type ServiceType } from '@infra/shared';
 import { apiErrorMessage } from '@/api/client';
 import { useProjects } from '@/api/projects';
 import { useProviders } from '@/api/providers';
@@ -16,16 +14,19 @@ import {
   useServices,
   useUpdateService,
 } from '@/api/services';
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
 import { useEnums } from '@/constants';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useCountryOptions } from '@/utils/countries';
 import { trimMoney } from '@/utils/format';
 import { notifyError, notifySuccess } from '@/utils/notify';
+import { type SForm, toIso } from './serviceForm';
 import { ServiceFormModal } from './ServiceFormModal';
 import { ServiceMetaModal } from './ServiceMetaModal';
 import { ServicePaymentsModal } from './ServicePaymentsModal';
 import { ServicesFilters } from './ServicesFilters';
 import { ServicesTable } from './ServicesTable';
-import { type SForm, toIso } from './serviceForm';
 
 export function ServicesPage() {
   const { t } = useTranslation();
@@ -52,7 +53,7 @@ export function ServicesPage() {
     projects?.find((p) => p.uuid === DEFAULT_PROJECT_UUID)?.uuid ?? projectOptions[0]?.value ?? '';
 
   const form = useForm<SForm>({
-    initialValues: {
+    defaultValues: {
       providerUuid: '',
       projectUuid: '',
       name: '',
@@ -64,17 +65,12 @@ export function ServicesPage() {
       nextBillingAt: '',
       isActive: true,
     },
-    validate: {
-      name: (v) => (v.trim() ? null : t('validation.enterName')),
-      // Accept any number of decimals. Extra ones are trimmed to 2 (on blur + submit).
-      cost: (v) => (/^\d+(\.\d+)?$/.test(v) ? null : t('validation.amountFormat')),
-      providerUuid: (v) => (v ? null : t('validation.selectProvider')),
-    },
+    mode: 'onSubmit',
   });
 
   const openCreate = () => {
     setEditing(null);
-    form.setValues({
+    form.reset({
       providerUuid: providerOptions[0]?.value ?? '',
       projectUuid: defaultProjectUuid,
       name: '',
@@ -91,7 +87,7 @@ export function ServicesPage() {
 
   const openEdit = (s: Service) => {
     setEditing(s);
-    form.setValues({
+    form.reset({
       providerUuid: s.providerUuid,
       projectUuid: s.projectUuid,
       name: s.name,
@@ -106,7 +102,7 @@ export function ServicesPage() {
     open();
   };
 
-  const submit = form.onSubmit(async (v) => {
+  const submit = form.handleSubmit(async (v) => {
     try {
       if (editing) {
         await update.mutateAsync({
@@ -156,20 +152,17 @@ export function ServicesPage() {
   };
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>{t('services.title')}</Title>
-          <Text c="dimmed">{t('services.subtitle')}</Text>
-        </div>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          onClick={openCreate}
-          disabled={providerOptions.length === 0}
-        >
-          {t('common.add')}
-        </Button>
-      </Group>
+    <div className="space-y-6">
+      <PageHeader
+        title={t('services.title')}
+        subtitle={t('services.subtitle')}
+        actions={
+          <Button onClick={openCreate} disabled={providerOptions.length === 0}>
+            <IconPlus className="size-4" />
+            {t('common.add')}
+          </Button>
+        }
+      />
 
       <ServicesFilters
         filter={filter}
@@ -209,6 +202,6 @@ export function ServicesPage() {
 
       <ServicePaymentsModal service={paymentsFor} onClose={() => setPaymentsFor(null)} />
       <ServiceMetaModal service={metaFor} onClose={() => setMetaFor(null)} />
-    </Stack>
+    </div>
   );
 }

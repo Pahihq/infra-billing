@@ -10,6 +10,12 @@ export function formatMoney(value: string | null | undefined, currency?: string 
   return currency ? `${formatted} ${currency}` : formatted;
 }
 
+/** Service cost: zero means "price not set" (the connector didn't report one) → dash. */
+export function formatCost(value: string | null | undefined, currency?: string | null): string {
+  if (value != null && Number(value) === 0) return '—';
+  return formatMoney(value, currency);
+}
+
 /** Truncate a money input to 2 decimals ("12.3456" → "12.34"); leaves non-numbers untouched. */
 export function trimMoney(value: string): string {
   const m = value.trim().match(/^(-?)(\d+)(?:\.(\d+))?$/);

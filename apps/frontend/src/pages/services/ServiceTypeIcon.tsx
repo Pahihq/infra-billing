@@ -29,5 +29,5 @@ const TYPE_ICONS: Record<ServiceType, Icon> = {
 // Type icon shown in the leading slot for non-located services, where a country flag is meaningless.
 export function ServiceTypeIcon({ type }: { type: ServiceType }) {
   const Cmp = TYPE_ICONS[type] ?? IconBox;
-  return <Cmp size={18} stroke={1.5} color="var(--mantine-color-dimmed)" />;
+  return <Cmp size={18} stroke={1.5} className="text-muted-foreground" />;
 }

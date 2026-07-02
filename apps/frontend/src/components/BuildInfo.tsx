@@ -1,29 +1,46 @@
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Code,
-  CopyButton,
-  Group,
-  Modal,
-  Stack,
-  Text,
-  Tooltip,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
 import { IconActivity, IconCheck, IconCopy } from '@tabler/icons-react';
 import dayjs from 'dayjs';
+import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBuildInfo } from '@/api/buildInfo';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useDisclosure } from '@/hooks/useDisclosure';
+import { cn } from '@/lib/utils';
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Group justify="space-between" wrap="nowrap" gap="md">
-      <Text size="sm" c="dimmed">
-        {label}
-      </Text>
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-sm text-muted-foreground">{label}</span>
       {children}
-    </Group>
+    </div>
+  );
+}
+
+function CommitCopy({ commit }: { commit: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    void navigator.clipboard.writeText(commit);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{commit.slice(0, 8)}</code>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon-xs" aria-label={t('build.copy')} onClick={copy}>
+            {copied ? <IconCheck className="size-3.5" /> : <IconCopy className="size-3.5" />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{copied ? t('build.copied') : t('build.copy')}</TooltipContent>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -41,51 +58,45 @@ export function BuildInfo() {
   return (
     <>
       <Button
-        variant={isDev ? 'light' : 'subtle'}
-        color={isDev ? 'brand' : 'gray'}
-        size="compact-sm"
-        leftSection={<IconActivity size={16} />}
+        variant="ghost"
+        size="sm"
+        className={cn(
+          'text-muted-foreground',
+          isDev &&
+            'bg-brand/15 font-bold tracking-[0.1em] text-brand hover:bg-brand/25 hover:text-brand',
+        )}
         onClick={open}
-        styles={isDev ? { label: { letterSpacing: '0.1em', fontWeight: 700 } } : undefined}
       >
+        <IconActivity className="size-4" />
         {label}
       </Button>
 
-      <Modal opened={opened} onClose={close} title={t('build.about')} size="sm" centered>
-        <Stack gap="sm">
-          <Group>
-            <Badge variant="light" color="brand" size="lg">
-              {label}
-            </Badge>
-          </Group>
-          <Row label={t('build.date')}>
-            <Text size="sm">
-              {data?.buildTime ? dayjs(data.buildTime).format('DD.MM.YYYY HH:mm') : '—'}
-            </Text>
-          </Row>
-          <Row label={t('build.commit')}>
-            {commit ? (
-              <CopyButton value={commit}>
-                {({ copied, copy }) => (
-                  <Group gap={6} wrap="nowrap">
-                    <Code>{commit.slice(0, 8)}</Code>
-                    <Tooltip label={copied ? t('build.copied') : t('build.copy')}>
-                      <ActionIcon variant="subtle" color="gray" size="sm" onClick={copy}>
-                        {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
-                )}
-              </CopyButton>
-            ) : (
-              <Text size="sm">—</Text>
-            )}
-          </Row>
-          <Row label={t('build.node')}>
-            <Text size="sm">{data?.nodeVersion ?? '—'}</Text>
-          </Row>
-        </Stack>
-      </Modal>
+      <Dialog open={opened} onOpenChange={(o) => !o && close()}>
+        {/* No autofocus: otherwise the focus ring lights up on the close button right away. */}
+        <DialogContent className="sm:max-w-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>{t('build.about')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Badge className="border-transparent bg-brand/15 px-2.5 py-1 text-sm text-brand">
+                {label}
+              </Badge>
+            </div>
+            <Row label={t('build.date')}>
+              <span className="text-sm">
+                {data?.buildTime ? dayjs(data.buildTime).format('DD.MM.YYYY HH:mm') : '—'}
+              </span>
+            </Row>
+            <Row label={t('build.commit')}>
+              {commit ? <CommitCopy commit={commit} /> : <span className="text-sm">—</span>}
+            </Row>
+            <Row label={t('build.node')}>
+              <span className="text-sm">{data?.nodeVersion ?? '—'}</span>
+            </Row>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

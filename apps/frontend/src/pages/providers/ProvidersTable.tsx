@@ -1,14 +1,26 @@
-import { ActionIcon, Badge, Group, Table, Text, Tooltip } from '@mantine/core';
+import type { Provider } from '@infra/shared';
 import {
   IconChartLine,
   IconEdit,
   IconExternalLink,
+  IconLoader2,
   IconRefresh,
   IconTrash,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { Provider } from '@infra/shared';
 import { ProviderIcon } from '@/components/ProviderIcon';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { providerFavicon } from '@/utils/favicon';
 import { formatDate, formatMoney } from '@/utils/format';
 
@@ -35,104 +47,145 @@ export function ProvidersTable({
 }: ProvidersTableProps) {
   const { t } = useTranslation();
   return (
-    <Table.ScrollContainer minWidth={760}>
-      <Table verticalSpacing="sm" highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>{t('providers.th.name')}</Table.Th>
-            <Table.Th>{t('providers.th.type')}</Table.Th>
-            <Table.Th>{t('providers.th.balance')}</Table.Th>
-            <Table.Th>{t('providers.th.services')}</Table.Th>
-            <Table.Th>{t('providers.th.payments')}</Table.Th>
-            <Table.Th>{t('providers.th.sync')}</Table.Th>
-            <Table.Th />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {providers?.map((p) => (
-            <Table.Tr key={p.uuid}>
-              <Table.Td>
-                <Group gap="xs">
-                  <ProviderIcon name={p.name} src={providerFavicon(p)} />
-                  <Text fw={600}>{p.name}</Text>
-                  {p.loginUrl && (
-                    <ActionIcon
-                      variant="subtle"
-                      size="sm"
-                      component="a"
-                      href={p.loginUrl}
-                      target="_blank"
-                    >
-                      <IconExternalLink size={14} />
-                    </ActionIcon>
-                  )}
-                </Group>
-              </Table.Td>
-              <Table.Td>
-                <Badge
-                  variant={p.kind === 'manual' ? 'default' : 'light'}
-                  color={p.kind === 'manual' ? 'gray' : 'brand'}
-                >
-                  {kindLabel(p.kind)}
-                </Badge>
-              </Table.Td>
-              <Table.Td>{formatMoney(p.balance, p.balanceCurrency)}</Table.Td>
-              <Table.Td>{p.servicesCount ?? 0}</Table.Td>
-              <Table.Td>{p.paymentsCount ?? 0}</Table.Td>
-              <Table.Td>
-                {p.lastSyncError ? (
-                  <Tooltip label={p.lastSyncError} w={260} style={{ whiteSpace: 'normal' }}>
-                    <Badge color="red" variant="light">
-                      {t('providers.syncError')}
-                    </Badge>
-                  </Tooltip>
-                ) : (
-                  <Text size="sm" c="dimmed">
-                    {formatDate(p.lastSyncAt)}
-                  </Text>
-                )}
-              </Table.Td>
-              <Table.Td>
-                <Group gap={4} justify="flex-end" wrap="nowrap">
-                  {p.kind !== 'manual' && (
-                    <Tooltip label={t('common.refresh')}>
-                      <ActionIcon
-                        variant="subtle"
-                        loading={syncingUuid === p.uuid}
-                        onClick={() => onSync(p.uuid)}
+    <Card className="overflow-hidden py-0">
+      <div className="overflow-x-auto">
+        <Table className="min-w-[760px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-muted-foreground">{t('providers.th.name')}</TableHead>
+              <TableHead className="text-muted-foreground">{t('providers.th.type')}</TableHead>
+              <TableHead className="text-muted-foreground">{t('providers.th.balance')}</TableHead>
+              <TableHead className="text-muted-foreground">{t('providers.th.services')}</TableHead>
+              <TableHead className="text-muted-foreground">{t('providers.th.payments')}</TableHead>
+              <TableHead className="text-muted-foreground">{t('providers.th.sync')}</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {providers?.map((p) => (
+              <TableRow key={p.uuid}>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-2">
+                    <ProviderIcon name={p.name} src={providerFavicon(p)} />
+                    <span className="font-semibold">{p.name}</span>
+                    {p.loginUrl && (
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-muted-foreground"
                       >
-                        <IconRefresh size={16} />
-                      </ActionIcon>
+                        <a
+                          href={p.loginUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={p.loginUrl}
+                        >
+                          <IconExternalLink className="size-3.5" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+                    {kindLabel(p.kind)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{formatMoney(p.balance, p.balanceCurrency)}</TableCell>
+                <TableCell>{p.servicesCount ?? 0}</TableCell>
+                <TableCell>{p.paymentsCount ?? 0}</TableCell>
+                <TableCell>
+                  {p.lastSyncError ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {/* Soft fill: a solid destructive badge is too harsh here. */}
+                        <Badge className="border-transparent bg-destructive/15 text-[10px] text-destructive uppercase tracking-wide">
+                          {t('providers.syncError')}
+                        </Badge>
+                      </TooltipTrigger>
+                      {/* text-pretty, not text-balance: balance shortens lines under max-w,
+                          leaving an empty "squashed" box. */}
+                      <TooltipContent className="max-w-[420px] whitespace-normal text-pretty px-3 py-2">
+                        {p.lastSyncError}
+                      </TooltipContent>
                     </Tooltip>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {formatDate(p.lastSyncAt)}
+                    </span>
                   )}
-                  {p.balance != null && (
-                    <Tooltip label={t('providers.balanceHistory.tooltip')}>
-                      <ActionIcon variant="subtle" onClick={() => onHistory(p)}>
-                        <IconChartLine size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                  <ActionIcon variant="subtle" onClick={() => onEdit(p)}>
-                    <IconEdit size={16} />
-                  </ActionIcon>
-                  <ActionIcon variant="subtle" color="red" onClick={() => onDelete(p)}>
-                    <IconTrash size={16} />
-                  </ActionIcon>
-                </Group>
-              </Table.Td>
-            </Table.Tr>
-          ))}
-          {!isLoading && providers?.length === 0 && (
-            <Table.Tr>
-              <Table.Td colSpan={7}>
-                <Text c="dimmed" ta="center" py="md">
-                  {t('providers.empty')}
-                </Text>
-              </Table.Td>
-            </Table.Tr>
-          )}
-        </Table.Tbody>
-      </Table>
-    </Table.ScrollContainer>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-nowrap items-center justify-end gap-1">
+                    {p.kind !== 'manual' && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={t('common.refresh')}
+                              disabled={syncingUuid === p.uuid}
+                              onClick={() => onSync(p.uuid)}
+                            >
+                              {syncingUuid === p.uuid ? (
+                                <IconLoader2 className="size-4 animate-spin" />
+                              ) : (
+                                <IconRefresh className="size-4" />
+                              )}
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{t('common.refresh')}</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {p.balance != null && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={t('providers.balanceHistory.tooltip')}
+                            onClick={() => onHistory(p)}
+                          >
+                            <IconChartLine className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{t('providers.balanceHistory.tooltip')}</TooltipContent>
+                      </Tooltip>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t('common.edit')}
+                      onClick={() => onEdit(p)}
+                    >
+                      <IconEdit className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      aria-label={t('common.delete')}
+                      onClick={() => onDelete(p)}
+                    >
+                      <IconTrash className="size-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {!isLoading && providers?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7}>
+                  <p className="py-4 text-center text-muted-foreground">{t('providers.empty')}</p>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </Card>
   );
 }

@@ -1,9 +1,10 @@
-import { Alert, Anchor, Button, Code, Group, Loader, Stack, Text } from '@mantine/core';
-import { IconBrandOauth, IconExternalLink } from '@tabler/icons-react';
+import type { NetcupDeviceStart } from '@infra/shared';
+import { IconBrandOauth, IconExternalLink, IconLoader2 } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { NetcupDeviceStart } from '@infra/shared';
-import { useNetcupDeviceStart, useNetcupDevicePoll } from '@/api/providers';
+import { useNetcupDevicePoll, useNetcupDeviceStart } from '@/api/providers';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { notifyError, notifySuccess } from '@/utils/notify';
 
 type Phase = 'idle' | 'waiting' | 'authorized' | 'error';
@@ -87,59 +88,65 @@ export function NetcupAuthorizeButton({ onToken }: { onToken: (token: string) =>
   };
 
   if (phase === 'authorized') {
-    return (
-      <Text size="sm" c="teal">
-        {t('providers.netcup.authorized')}
-      </Text>
-    );
+    return <p className="text-sm text-success">{t('providers.netcup.authorized')}</p>;
   }
 
   if (phase === 'waiting' && info) {
     // Only ever render an http(s) link (never a javascript:/empty href from a tampered response).
     const safeUrl = httpUrl(info.verificationUriComplete);
     return (
-      <Alert variant="light" color="brand" title={t('providers.netcup.instructions')}>
-        <Stack gap="xs">
-          {safeUrl ? (
-            <Anchor href={safeUrl} target="_blank" rel="noopener noreferrer">
-              <Group gap={4}>
-                <IconExternalLink size={16} />
+      <Alert className="border-primary/25 bg-primary/5">
+        <AlertTitle>{t('providers.netcup.instructions')}</AlertTitle>
+        <AlertDescription>
+          <div className="space-y-2">
+            {safeUrl ? (
+              <a
+                href={safeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-brand underline-offset-4 hover:underline"
+              >
+                <IconExternalLink className="size-4" />
                 {t('providers.netcup.openLink')}
-              </Group>
-            </Anchor>
-          ) : (
-            <Code>{info.verificationUriComplete || info.verificationUri}</Code>
-          )}
-          <Group gap="xs">
-            <Text size="sm">{t('providers.netcup.code')}</Text>
-            <Code>{info.userCode}</Code>
-          </Group>
-          <Group gap="xs">
-            <Loader size="xs" />
-            <Text size="sm" c="dimmed">
-              {t('providers.netcup.waiting')}
-            </Text>
-          </Group>
-        </Stack>
+              </a>
+            ) : (
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+                {info.verificationUriComplete || info.verificationUri}
+              </code>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{t('providers.netcup.code')}</span>
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+                {info.userCode}
+              </code>
+            </div>
+            <div className="flex items-center gap-2">
+              <IconLoader2 className="size-3.5 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{t('providers.netcup.waiting')}</span>
+            </div>
+          </div>
+        </AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <Stack gap={4}>
+    <div className="space-y-1">
       <Button
-        variant="light"
-        leftSection={<IconBrandOauth size={16} />}
-        loading={phase === 'waiting'}
+        type="button"
+        variant="ghost"
+        className="w-full bg-brand/10 text-brand hover:bg-brand/20 hover:text-brand"
+        disabled={phase === 'waiting'}
         onClick={authorize}
       >
+        {phase === 'waiting' ? (
+          <IconLoader2 className="size-4 animate-spin" />
+        ) : (
+          <IconBrandOauth className="size-4" />
+        )}
         {phase === 'error' ? t('providers.netcup.retry') : t('providers.netcup.authorize')}
       </Button>
-      {phase === 'error' && (
-        <Text size="xs" c="red">
-          {errMsg}
-        </Text>
-      )}
-    </Stack>
+      {phase === 'error' && <p className="text-xs text-destructive">{errMsg}</p>}
+    </div>
   );
 }

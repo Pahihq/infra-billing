@@ -1,7 +1,16 @@
-import { Group, Select } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
 import type { Dispatch, SetStateAction } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ServiceFilter } from '@/api/services';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+// SelectItem forbids value="" — sentinel for the "no filter" option.
+const ALL = 'all';
 
 interface ServicesFiltersProps {
   filter: ServiceFilter;
@@ -20,44 +29,70 @@ export function ServicesFilters({
 }: ServicesFiltersProps) {
   const { t } = useTranslation();
   return (
-    <Group>
+    <div className="flex flex-wrap gap-3">
       <Select
-        placeholder={t('services.filterAllProviders')}
-        clearable
-        data={providerOptions}
-        value={filter.providerUuid ?? null}
-        onChange={(v) => setFilter((f) => ({ ...f, providerUuid: v ?? undefined }))}
-        w={220}
-      />
+        value={filter.providerUuid ?? ALL}
+        onValueChange={(v) => setFilter((f) => ({ ...f, providerUuid: v === ALL ? undefined : v }))}
+      >
+        <SelectTrigger className="w-[220px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>{t('services.filterAllProviders')}</SelectItem>
+          {providerOptions.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Select
-        placeholder={t('services.filterAllProjects')}
-        clearable
-        data={projectOptions}
-        value={filter.projectUuid ?? null}
-        onChange={(v) => setFilter((f) => ({ ...f, projectUuid: v ?? undefined }))}
-        w={200}
-      />
+        value={filter.projectUuid ?? ALL}
+        onValueChange={(v) => setFilter((f) => ({ ...f, projectUuid: v === ALL ? undefined : v }))}
+      >
+        <SelectTrigger className="w-[200px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>{t('services.filterAllProjects')}</SelectItem>
+          {projectOptions.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Select
-        placeholder={t('services.filterAllTypes')}
-        clearable
-        data={typeOptions}
-        value={filter.type ?? null}
-        onChange={(v) => setFilter((f) => ({ ...f, type: v ?? undefined }))}
-        w={200}
-      />
+        value={filter.type ?? ALL}
+        onValueChange={(v) => setFilter((f) => ({ ...f, type: v === ALL ? undefined : v }))}
+      >
+        <SelectTrigger className="w-[200px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>{t('services.filterAllTypes')}</SelectItem>
+          {typeOptions.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Select
-        placeholder={t('services.filterActivity')}
-        clearable
-        data={[
-          { value: 'true', label: t('services.activityActive') },
-          { value: 'false', label: t('services.activityInactive') },
-        ]}
-        value={filter.isActive === undefined ? null : String(filter.isActive)}
-        onChange={(v) =>
-          setFilter((f) => ({ ...f, isActive: v == null ? undefined : v === 'true' }))
+        value={filter.isActive === undefined ? ALL : String(filter.isActive)}
+        onValueChange={(v) =>
+          setFilter((f) => ({ ...f, isActive: v === ALL ? undefined : v === 'true' }))
         }
-        w={160}
-      />
-    </Group>
+      >
+        <SelectTrigger className="w-[160px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>{t('services.filterAll')}</SelectItem>
+          <SelectItem value="true">{t('services.activityActive')}</SelectItem>
+          <SelectItem value="false">{t('services.activityInactive')}</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

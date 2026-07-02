@@ -1,15 +1,6 @@
-import { Avatar } from '@mantine/core';
 import { useEffect, useState } from 'react';
 
-const COLORS = ['violet', 'teal', 'blue', 'grape', 'cyan', 'indigo', 'pink', 'orange', 'lime'];
-
-function colorFor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i += 1) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-  return COLORS[hash % COLORS.length];
-}
-
-// Colored initial avatar, swapped for the favicon only once it loads. Google's "no favicon"
+// Neutral initial avatar, swapped for the favicon only once it loads. Google's "no favicon"
 // placeholder is a ~16px globe, so reject anything that small to avoid the blurry globe.
 export function ProviderIcon({
   name,
@@ -34,9 +25,23 @@ export function ProviderIcon({
 
   const initial = (name.trim().charAt(0) || '?').toUpperCase();
 
+  if (favicon) {
+    return (
+      <img
+        src={favicon}
+        alt=""
+        className="shrink-0 rounded-sm object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   return (
-    <Avatar src={favicon} size={size} radius="sm" color={colorFor(name)} variant="filled">
+    <div
+      className="flex shrink-0 items-center justify-center rounded-sm border border-border bg-secondary font-semibold text-secondary-foreground select-none"
+      style={{ width: size, height: size, fontSize: Math.max(10, Math.round(size * 0.5)) }}
+    >
       {initial}
-    </Avatar>
+    </div>
   );
 }
