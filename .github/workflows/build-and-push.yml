@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram message
-        uses: proDreams/actions-telegram-notifier@v3
+        uses: proDreams/actions-telegram-notifier@v3.0.0
         with:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram message
-        uses: proDreams/actions-telegram-notifier@v3
+        uses: proDreams/actions-telegram-notifier@v3.0.0
         with:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send error notification
-        uses: proDreams/actions-telegram-notifier@v3
+        uses: proDreams/actions-telegram-notifier@v3.0.0
         with:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
