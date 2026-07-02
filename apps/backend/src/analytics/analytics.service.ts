@@ -349,14 +349,14 @@ export class AnalyticsService {
       projBuckets.set(key, ZERO());
     }
 
-    // Actuals: real charges (Selectel consumption, BILLmanager expenses, …) summed per month for
-    // past + current months. These rows are excluded from KPI totals (§ summary), so no double count.
-    const charges = await this.prisma.payment.findMany({
-      where: { type: 'charge', paymentDate: { gte: windowStart.toDate() } },
+    // Actuals: top-ups + manual payments (real money paid out), same definition as
+    // currentMonthPayments/totalSpent in summary() — keeps "Actual" consistent with the KPI card.
+    const payments = await this.prisma.payment.findMany({
+      where: { type: { not: 'charge' }, paymentDate: { gte: windowStart.toDate() } },
     });
-    for (const p of charges) {
+    for (const p of payments) {
       const key = dayjs(p.paymentDate).format('YYYY-MM');
-      if (!actualBuckets.has(key) || key > currentKey) continue; // future-dated charges ignored
+      if (!actualBuckets.has(key) || key > currentKey) continue; // future-dated payments ignored
       const base = this.currency.convert(
         new Decimal(p.amount.toString()),
         p.currency,
