@@ -189,6 +189,32 @@ html.login-artwork {
   background-color: #0a0a0c;
 }
 
+/* Radix Collapsible has no built-in height animation — without these the sections snap. */
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+[data-slot='collapsible-content'][data-state='open'] {
+  overflow: hidden;
+  animation: collapsible-down 0.2s ease-out;
+}
+[data-slot='collapsible-content'][data-state='closed'] {
+  overflow: hidden;
+  animation: collapsible-up 0.2s ease-out;
+}
+
 /* 400ms with no delay — in sync with the recharts bars/donuts and the stars odometer. */
 .brand-marker {
   animation: brand-marker-sweep 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;

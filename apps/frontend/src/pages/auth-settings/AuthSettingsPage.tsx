@@ -127,7 +127,8 @@ export function AuthSettingsPage() {
     <div className="space-y-6">
       <PageHeader title={t('auth.title')} subtitle={t('auth.subtitle')} />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* items-start: expanding one card (passkey settings) must not stretch the other. */}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <AuthMethodsCard
           form={methodsForm}
           pkOpen={pkOpen}
