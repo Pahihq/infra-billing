@@ -144,6 +144,8 @@
   }
   html {
     color-scheme: light;
+    /* Theme the canvas itself: otherwise overscroll and pre-body paint show white in dark mode. */
+    @apply bg-background;
   }
   html.dark {
     color-scheme: dark;
@@ -181,11 +183,18 @@
     color: #430b34;
   }
 }
+/* The login page is always-dark artwork: keep the canvas near-black for its whole lifetime
+   (set via a class from LoginPage), covering overscroll and lazy-chunk gaps in light theme. */
+html.login-artwork {
+  background-color: #0a0a0c;
+}
+
+/* 400ms with no delay — in sync with the recharts bars/donuts and the stars odometer. */
 .brand-marker {
-  animation: brand-marker-sweep 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+  animation: brand-marker-sweep 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .brand-marker-text {
-  animation: brand-marker-ink 0.9s linear 0.35s both;
+  animation: brand-marker-ink 0.4s linear both;
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-marker,

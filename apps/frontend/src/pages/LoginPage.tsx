@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type LoginInput, loginSchema } from '@infra/shared';
 import { IconArrowsShuffle, IconFingerprint, IconLoader2 } from '@tabler/icons-react';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useLayoutEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLogin, usePasskeyLogin, useSetup, useSetupStatus } from '@/api/auth';
@@ -27,6 +27,14 @@ const LoginTitle = lazy(() =>
 export function LoginPage() {
   const { t } = useTranslation();
   const status = useSetupStatus();
+
+  // Keep the canvas near-black for the page's lifetime (see html.login-artwork in index.css):
+  // the boot override from index.html is cleared by ThemeProvider, and without this class the
+  // light-theme white canvas peeks through on overscroll. Layout effect = applied before paint.
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('login-artwork');
+    return () => document.documentElement.classList.remove('login-artwork');
+  }, []);
 
   return (
     // Force the dark class: this artwork page is always dark regardless of the theme.

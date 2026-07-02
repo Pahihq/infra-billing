@@ -34,6 +34,8 @@ function readStored(): ColorScheme {
 /** Toggles .dark on <html> synchronously — matters for View Transitions (see ThemeToggle). */
 function applyScheme(resolved: 'light' | 'dark') {
   document.documentElement.classList.toggle('dark', resolved === 'dark');
+  // index.html sets a boot background (pre-paint, /login) — React owns theming from here.
+  document.documentElement.style.removeProperty('background-color');
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
