@@ -61,12 +61,12 @@ function runwayLabel(days: number): string {
 }
 
 /** Low balance: an imminent charge the provider balance won't cover. */
-export function lowBalanceMessage(ub: UpcomingBilling, baseCurrency: string): string {
+export function lowBalanceMessage(ub: UpcomingBilling): string {
   return (
     `${EMOJI.lowBalance} <b>Низкий баланс</b>\n\n` +
     `${EMOJI.provider} ${providerLink(ub.providerName, ub.providerLoginUrl)}\n` +
     `${EMOJI.service} ${esc(ub.name)}\n\n` +
-    `${EMOJI.clock} Списание <code>${esc(ub.costBase)} ${esc(baseCurrency)}</code> ${whenLabel(ub.daysUntil)} — баланса не хватит.\n` +
+    `${EMOJI.clock} Списание <code>${esc(ub.cost)} ${esc(ub.currency)}</code> ${whenLabel(ub.daysUntil)} — баланса не хватит.\n` +
     `${EMOJI.balance} Баланс: <code>${esc(ub.providerBalance ?? '0')} ${esc(ub.providerBalanceCurrency ?? '')}</code>`
   );
 }
@@ -141,7 +141,7 @@ export function sampleMessages(): string[] {
   };
   return [
     `${EMOJI.samples} <b>Проверка уведомлений</b> — примеры всех типов ниже:`,
-    lowBalanceMessage(sample, 'RUB'),
+    lowBalanceMessage(sample),
     lowRunwayMessage(sampleRunway),
     upcomingBillingMessage(sample, inTwoDays),
     syncErrorMessage('Тестовый провайдер', 'HTTP 401: неверный API-токен', 'https://example.com'),

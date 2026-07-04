@@ -38,7 +38,7 @@ export class NotificationsService {
     //    (severity "critical": uncovered + due within ~a week, same definition as the dashboard).
     for (const ub of summary.upcomingBillings) {
       if (ub.severity !== 'critical') continue;
-      const html = lowBalanceMessage(ub, summary.baseCurrency);
+      const html = lowBalanceMessage(ub);
       if (await this.maybeSend(`low-balance:${ub.serviceUuid}`, html)) sent += 1;
     }
 
