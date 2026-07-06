@@ -17,6 +17,7 @@ export const settingsSchema = z.object({
     .describe('Upcoming billing alert window in days'),
   telegramChatId: z.string().describe('Telegram chat ID').nullable(),
   telegramTopicId: z.string().describe('Telegram topic ID').nullable(),
+  telegramProxyUrl: z.string().describe('SOCKS proxy URL for Telegram').nullable(),
   telegramConfigured: z.boolean().describe('Bot token is set'),
 });
 export type Settings = z.infer<typeof settingsSchema>;
@@ -38,5 +39,11 @@ export const updateSettingsSchema = z.object({
   // Empty string clears the field.
   telegramChatId: z.string().describe('Telegram chat ID').optional(),
   telegramTopicId: z.string().describe('Telegram topic ID').optional(),
+  // Empty string clears; otherwise a socks/socks4/socks4a/socks5/socks5h URL.
+  telegramProxyUrl: z
+    .string()
+    .regex(/^$|^socks(4a?|5h?)?:\/\/\S+$/)
+    .describe('SOCKS proxy URL for Telegram notifications')
+    .optional(),
 });
 export type UpdateSettings = z.infer<typeof updateSettingsSchema>;

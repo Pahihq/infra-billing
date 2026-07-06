@@ -22,6 +22,10 @@ export const settings = {
       chatIdPlaceholder: '-1001234567890',
       topicId: 'Topic ID (optional)',
       topicIdDescription: 'Forum topic ID, if sending to a topic',
+      proxyUrl: 'SOCKS proxy (optional)',
+      proxyUrlDescription:
+        'SOCKS5 proxy for delivering notifications. Prefer socks5h:// — DNS is resolved by the proxy (socks5:// sends a raw IP, some proxies reject that). Empty — connect directly',
+      proxyUrlPlaceholder: 'socks5h://user:pass@host:1080',
       upcomingBillingDays: 'Warn about billing within (days)',
       sendSamples: 'Send samples',
       saved: 'Notification settings saved',
@@ -69,6 +73,10 @@ export const settings = {
       chatIdPlaceholder: '-1001234567890',
       topicId: 'Topic ID (необязательно)',
       topicIdDescription: 'ID топика форума, если шлём в топик',
+      proxyUrl: 'SOCKS-прокси (необязательно)',
+      proxyUrlDescription:
+        'SOCKS5-прокси для доставки уведомлений. Лучше socks5h:// — DNS резолвит прокси (socks5:// шлёт голый IP, часть прокси такое отбрасывает). Пусто — напрямую',
+      proxyUrlPlaceholder: 'socks5h://user:pass@host:1080',
       upcomingBillingDays: 'Предупреждать о списании за (дней)',
       sendSamples: 'Отправить примеры',
       saved: 'Настройки уведомлений сохранены',

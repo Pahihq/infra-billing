@@ -10,6 +10,7 @@ model Settings {
   telegramBotTokenEnc  Bytes?  @map("telegram_bot_token_enc")
   telegramChatId       String? @map("telegram_chat_id")
   telegramTopicId      String? @map("telegram_topic_id")
+  telegramProxyUrl     String? @map("telegram_proxy_url")
 
   @@map("settings")
 }

@@ -14,6 +14,7 @@ interface SettingsRow {
   telegramBotTokenEnc: Uint8Array | null;
   telegramChatId: string | null;
   telegramTopicId: string | null;
+  telegramProxyUrl: string | null;
 }
 
 @Injectable()
@@ -42,6 +43,7 @@ export class SettingsService {
     // Empty string clears chat/topic; the token is encrypted and only set when non-empty.
     if (dto.telegramChatId !== undefined) data.telegramChatId = dto.telegramChatId || null;
     if (dto.telegramTopicId !== undefined) data.telegramTopicId = dto.telegramTopicId || null;
+    if (dto.telegramProxyUrl !== undefined) data.telegramProxyUrl = dto.telegramProxyUrl || null;
     if (dto.telegramBotToken) data.telegramBotTokenEnc = this.crypto.encrypt(dto.telegramBotToken);
 
     const row = await this.settings.update(data);
@@ -60,6 +62,7 @@ export class SettingsService {
       upcomingBillingDays: row.upcomingBillingDays,
       telegramChatId: row.telegramChatId,
       telegramTopicId: row.telegramTopicId,
+      telegramProxyUrl: row.telegramProxyUrl,
       telegramConfigured: row.telegramBotTokenEnc != null, // never expose the token itself
     };
   }

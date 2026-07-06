@@ -18,6 +18,7 @@ interface TelegramForm {
   telegramBotToken: string;
   telegramChatId: string;
   telegramTopicId: string;
+  telegramProxyUrl: string;
   upcomingBillingDays: number;
 }
 
@@ -33,6 +34,7 @@ export function TelegramSettingsCard() {
       telegramBotToken: '',
       telegramChatId: '',
       telegramTopicId: '',
+      telegramProxyUrl: '',
       upcomingBillingDays: 3,
     },
     mode: 'onSubmit',
@@ -46,6 +48,7 @@ export function TelegramSettingsCard() {
       telegramBotToken: '',
       telegramChatId: settings.telegramChatId ?? '',
       telegramTopicId: settings.telegramTopicId ?? '',
+      telegramProxyUrl: settings.telegramProxyUrl ?? '',
       upcomingBillingDays: settings.upcomingBillingDays,
     });
   }, [settings, reset]);
@@ -57,6 +60,7 @@ export function TelegramSettingsCard() {
         telegramBotToken: v.telegramBotToken || undefined, // empty = keep existing
         telegramChatId: v.telegramChatId,
         telegramTopicId: v.telegramTopicId,
+        telegramProxyUrl: v.telegramProxyUrl,
         upcomingBillingDays: v.upcomingBillingDays,
       });
       setValue('telegramBotToken', '');
@@ -151,6 +155,18 @@ export function TelegramSettingsCard() {
               {t('settings.telegram.topicIdDescription')}
             </p>
             <Input id="tg-topic-id" {...register('telegramTopicId')} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="tg-proxy-url">{t('settings.telegram.proxyUrl')}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t('settings.telegram.proxyUrlDescription')}
+            </p>
+            <Input
+              id="tg-proxy-url"
+              placeholder={t('settings.telegram.proxyUrlPlaceholder')}
+              {...register('telegramProxyUrl')}
+            />
           </div>
 
           <div className="space-y-1.5">

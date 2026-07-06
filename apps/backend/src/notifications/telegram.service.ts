@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Api } from 'grammy';
 import { SettingsRepository } from '@repositories/settings/settings.repository';
+import { Api } from 'grammy';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 import { CryptoService } from '../crypto/crypto.service';
 
 interface TelegramConfig {
   token: string;
   chatId: string;
   topicId: string;
+  proxyUrl: string;
 }
 
 // Outbound-only: grammY `Api`, no Bot/polling/webhook. Config (token AES-GCM encrypted) read from
@@ -26,6 +28,7 @@ export class TelegramService {
       telegramBotTokenEnc: Uint8Array | null;
       telegramChatId: string | null;
       telegramTopicId: string | null;
+      telegramProxyUrl: string | null;
     } | null,
   ): TelegramConfig | null {
     if (s?.telegramBotTokenEnc && s.telegramChatId) {
@@ -34,6 +37,7 @@ export class TelegramService {
           token: this.crypto.decrypt(s.telegramBotTokenEnc),
           chatId: s.telegramChatId,
           topicId: s.telegramTopicId ?? '',
+          proxyUrl: s.telegramProxyUrl ?? '',
         };
       } catch {
         this.logger.error('Failed to decrypt the Telegram token from settings');
@@ -60,8 +64,15 @@ export class TelegramService {
       link_preview_options: { is_disabled: true };
     } = { parse_mode: 'HTML', link_preview_options: { is_disabled: true } };
     if (cfg.topicId) options.message_thread_id = Number(cfg.topicId);
+
     try {
-      await new Api(cfg.token).sendMessage(cfg.chatId, html, options);
+      const api = cfg.proxyUrl
+        ? new Api(cfg.token, {
+            timeoutSeconds: 10,
+            baseFetchConfig: { agent: new SocksProxyAgent(cfg.proxyUrl), compress: true },
+          })
+        : new Api(cfg.token, { timeoutSeconds: 10 });
+      await api.sendMessage(cfg.chatId, html, options);
       return true;
     } catch (e) {
       this.logger.error(
