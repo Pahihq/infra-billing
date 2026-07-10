@@ -2,16 +2,18 @@ import axios, { type AxiosInstance } from 'axios';
 import Decimal from 'decimal.js';
 import { REQUEST_TIMEOUT_MS } from '../common/http';
 import { Account, Connector, PaymentData, ServiceData } from '../connector.interface';
-import { VDSINA_CURRENCY, mapVdsinaOperation, mapVdsinaServer } from './vdsina.mapper';
+import { mapVdsinaOperation, mapVdsinaServer } from './vdsina.mapper';
 import {
+  VDSINA_BASE_URLS,
   VdsinaBalance,
+  VdsinaCredentials,
   VdsinaEnvelope,
   VdsinaOperation,
   VdsinaServer,
   VdsinaServerPlan,
 } from './vdsina.types';
 
-const BASE_URL = 'https://userapi.vdsina.ru';
+const DEFAULT_BASE_URL = 'https://userapi.vdsina.ru';
 
 /** Server detail data.{cpu,ram,disk} carry value (plan base) vs total (configured) pairs. */
 function isCustomized(server: VdsinaServer): boolean {
@@ -29,19 +31,32 @@ function isCustomized(server: VdsinaServer): boolean {
 }
 
 /**
- * VDSina Public API (https://vdsina.ru/tech/api): JSON over HTTPS, token in the Authorization
- * header. The account balance is prepaid RUB (`real`; bonus/partner are kept in meta only),
- * servers are listed via /v1/server, and account operations import top-ups/charges.
+ * VDSina Public API (https://vdsina.ru/tech/api, https://www.vdsina.com/tech/api): JSON over
+ * HTTPS, token in the Authorization header. Two branches share one API; `baseUrl` picks the
+ * branch and thereby the billing currency (.ru — RUB, .com — USD; the API never reports it).
+ * The account balance is the prepaid `real` purse (bonus/partner are not real money), servers
+ * are listed via /v1/server, account operations import top-ups/charges. Dates on both branches
+ * are Europe/Moscow.
  */
 export class VdsinaConnector implements Connector {
   private readonly http: AxiosInstance;
+  private readonly currency: string;
   private readonly plansByGroup = new Map<number, Promise<VdsinaServerPlan[]>>();
 
-  constructor(token: string) {
+  constructor(creds: VdsinaCredentials) {
+    const baseUrl = (creds.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, '');
+    const currency = VDSINA_BASE_URLS[baseUrl];
+    // Hard allowlist: anything else would re-send the API token to a foreign host.
+    if (!currency) {
+      throw new Error(
+        'VDSina: baseUrl must be https://userapi.vdsina.ru or https://userapi.vdsina.com',
+      );
+    }
+    this.currency = currency;
     this.http = axios.create({
-      baseURL: BASE_URL,
+      baseURL: baseUrl,
       timeout: REQUEST_TIMEOUT_MS,
-      headers: { Authorization: token },
+      headers: { Authorization: creds.token },
       // The JSON API never legitimately redirects; refuse rather than re-send the token elsewhere.
       maxRedirects: 0,
     });
@@ -76,7 +91,7 @@ export class VdsinaConnector implements Connector {
     });
     return {
       balance: new Decimal(String(data.data?.real ?? 0)),
-      currency: VDSINA_CURRENCY,
+      currency: this.currency,
     };
   }
 
@@ -84,14 +99,16 @@ export class VdsinaConnector implements Connector {
     const { data } = await this.http.get<VdsinaEnvelope<VdsinaServer[]>>('/v1/server', { signal });
     const services = (data.data ?? []).filter((s) => s.status !== 'deleted');
     const enriched = await Promise.all(services.map((s) => this.withDetails(s, signal)));
-    return enriched.map(mapVdsinaServer);
+    return enriched.map((s) => mapVdsinaServer(s, this.currency));
   }
 
   async fetchPayments(signal: AbortSignal): Promise<PaymentData[]> {
     const { data } = await this.http.get<VdsinaEnvelope<VdsinaOperation[]>>('/v1/operation', {
       signal,
     });
-    return (data.data ?? []).map(mapVdsinaOperation).filter((p): p is PaymentData => p !== null);
+    return (data.data ?? [])
+      .map((o) => mapVdsinaOperation(o, this.currency))
+      .filter((p): p is PaymentData => p !== null);
   }
 
   /** The list endpoint can omit fields; fill them from the detail endpoint when useful. */

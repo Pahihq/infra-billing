@@ -2,8 +2,6 @@ import Decimal from 'decimal.js';
 import { PaymentData, ServiceData } from '../connector.interface';
 import { VdsinaOperation, VdsinaServer } from './vdsina.types';
 
-export const VDSINA_CURRENCY = 'RUB';
-
 const PERIOD_MAP: Record<string, string> = {
   day: 'daily',
   daily: 'daily',
@@ -54,7 +52,7 @@ function period(plan: VdsinaServer['server-plan']): string | undefined {
   return raw ? PERIOD_MAP[raw] : undefined;
 }
 
-export function mapVdsinaServer(s: VdsinaServer): ServiceData {
+export function mapVdsinaServer(s: VdsinaServer, currency: string): ServiceData {
   const plan = s['server-plan'] ?? s.server_plan;
   return {
     externalId: String(s.id),
@@ -62,7 +60,7 @@ export function mapVdsinaServer(s: VdsinaServer): ServiceData {
     type: 'vps',
     countryCode: countryCode(s),
     cost: asDecimal(plan?.cost),
-    currency: VDSINA_CURRENCY,
+    currency,
     period: period(plan),
     nextBilling: parseDate(s.end ?? s.expire ?? s.expires ?? s.prolong),
     meta: {
@@ -79,7 +77,7 @@ export function mapVdsinaServer(s: VdsinaServer): ServiceData {
   };
 }
 
-export function mapVdsinaOperation(o: VdsinaOperation): PaymentData | null {
+export function mapVdsinaOperation(o: VdsinaOperation, currency: string): PaymentData | null {
   // Only completed operations represent real money movement. Pending top-ups have paylink/status=0.
   if (o.status !== 1) return null;
   if (o.type !== 1 && o.type !== -1) return null;
@@ -93,7 +91,7 @@ export function mapVdsinaOperation(o: VdsinaOperation): PaymentData | null {
     externalId: `operation:${o.id}`,
     type: o.type === 1 ? 'topup' : 'charge',
     amount,
-    currency: VDSINA_CURRENCY,
+    currency,
     date: parseDate(o.updated ?? o.created) ?? new Date(0),
     description: o.comment || o.payment?.name || undefined,
     serviceExternalId: serviceId,

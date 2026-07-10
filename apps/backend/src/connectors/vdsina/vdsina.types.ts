@@ -1,5 +1,17 @@
 // VDSina Public API response shapes (https://userapi.vdsina.ru). Only consumed fields are typed.
 
+// Two official branches serve a byte-identical API (same OpenAPI spec); the branch fixes the
+// billing currency, which never appears in responses. Keys are the only accepted base URLs.
+export const VDSINA_BASE_URLS: Record<string, string> = {
+  'https://userapi.vdsina.ru': 'RUB',
+  'https://userapi.vdsina.com': 'USD',
+};
+
+export interface VdsinaCredentials {
+  token: string;
+  baseUrl?: string; // one of VDSINA_BASE_URLS keys; default — the .ru branch
+}
+
 export interface VdsinaEnvelope<T> {
   status: 'ok' | 'error' | string;
   status_msg?: string;

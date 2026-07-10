@@ -65,6 +65,8 @@ export const providers = {
       apiTokenDescAeza: 'Aeza panel → API Keys → create an API key',
       apiTokenDescVdsina:
         'VDSina control panel → user list → permanent API token, sent as the Authorization header',
+      apiBaseUrlDescVdsina:
+        'Branch API host: https://userapi.vdsina.ru (RUB, default) or https://userapi.vdsina.com (USD)',
       apiTokenDescCloudflare:
         'Cloudflare → My Profile → API Tokens → create a token with Registrar: Domains:Read and Billing:Read',
       cloudflareAccountIdDesc: 'Cloudflare account ID (dashboard URL or GET /accounts)',
@@ -189,6 +191,8 @@ export const providers = {
       apiTokenDescAeza: 'Панель Aeza → API Keys → создать API-ключ',
       apiTokenDescVdsina:
         'Личный кабинет VDSina → список пользователей → постоянный API-токен (заголовок Authorization)',
+      apiBaseUrlDescVdsina:
+        'API-хост филиала: https://userapi.vdsina.ru (RUB, по умолчанию) или https://userapi.vdsina.com (USD)',
       apiTokenDescCloudflare:
         'Cloudflare → My Profile → API Tokens → создать токен с правами Registrar: Domains:Read и Billing:Read',
       cloudflareAccountIdDesc: 'Account ID аккаунта Cloudflare (из URL дашборда или GET /accounts)',
